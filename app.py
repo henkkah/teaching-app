@@ -224,6 +224,44 @@ def modifycourse(id):
     return redirect("/teacher")
 
 
+@app.route("/publishcourse/<int:id>")
+def publishcourse(id):
+    teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    sql = "UPDATE courses SET visible=:visible WHERE teacher_id = :teacher_id and id = :id"
+    db.session.execute(sql, {"visible":"1", "teacher_id":teacher_id, "id":id})
+    db.session.commit()
+    
+    return redirect("/teacher")
+
+@app.route("/hidecourse/<int:id>")
+def hidecourse(id):
+    teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    sql = "UPDATE courses SET visible=:visible WHERE teacher_id = :teacher_id and id = :id"
+    db.session.execute(sql, {"visible":"0", "teacher_id":teacher_id, "id":id})
+    db.session.commit()
+    
+    return redirect("/teacher")
+
+
+@app.route("/removecourse/<int:id>")
+def removecourse(id):
+    teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    sql = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND id=:id"
+    result = db.session.execute(sql, {"teacher_id":teacher_id, "id":id}).fetchone()
+    string = result[0] + " " + result[1] + " (" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to completion)"
+    return render_template("removecourse.html", id=id, course_description=string)
+    
+@app.route("/deletecourse/<int:id>", methods=["POST"])
+def deletecourse(id):
+    deletion = request.form["deletion"]
+    if deletion == "yes":
+        teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+        sql = "UPDATE courses SET deleted=:deleted WHERE teacher_id = :teacher_id and id = :id"
+        db.session.execute(sql, {"deleted":"1", "teacher_id":teacher_id, "id":id})
+        db.session.commit()
+    return redirect("/teacher")
+
+
 
 
 

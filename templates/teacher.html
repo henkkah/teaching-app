@@ -7,10 +7,10 @@ username: {{ session.username }}<br>
 <p>MY COURSES
 
 <p>
-Visible to Students:
+Published to Students:
 <ul>
 {% for course in visiblecourses %}
-<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a>
+<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a> <a href="/hidecourse/{{ course[1] }}">Hide course</a> <a href="/removecourse/{{ course[1] }}">Delete course</a>
 {% endfor %}
 </ul>
 </p>
@@ -19,7 +19,7 @@ Visible to Students:
 Hidden from Students:
 <ul>
 {% for course in hiddencourses %}
-<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a>
+<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a> <a href="/publishcourse/{{ course[1] }}">Publish course</a> <a href="/removecourse/{{ course[1] }}">Delete course</a>
 {% endfor %}
 </ul>
 </p>
