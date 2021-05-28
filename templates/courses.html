@@ -4,21 +4,21 @@ username: {{ session.username }}<br>
 <a href="/logout">Log out</a>
 </p>
 
-<p>MY COURSES
+<p>ALL COURSES
 
 <p>
-Ongoing:
+Available:
 <ul>
-{% for course in ongoingcourses %}
-<li> {{ course[0] }} <a href="/quitcourse/{{ course[1] }}">Leave course</a>
+{% for course in newcourses %}
+<li> {{ course[0] }} <a href="/joincourse/{{ course[1] }}">Join course</a>
 {% endfor %}
 </ul>
 </p>
 
 <p>
-Completed:
+Enrolled:
 <ul>
-{% for course in completedcourses %}
+{% for course in enrolledcourses %}
 <li> {{ course[0] }} <a href="/quitcourse/{{ course[1] }}">Leave course</a>
 {% endfor %}
 </ul>
@@ -26,8 +26,4 @@ Completed:
 
 </p>
 
-<p><a href="/courses">View available courses</a></p>
-
-
-
-
+<p><a href="/student">Back to Student-view</a></p>

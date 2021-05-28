@@ -82,7 +82,7 @@ def teacher():
     sql1 = "SELECT id, code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND visible=:visible AND deleted=:deleted"
     result1 = db.session.execute(sql1, {"teacher_id":teacher_id, "visible":"1", "deleted":"0"})
     sql2 = "SELECT id, code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND visible=:visible AND deleted=:deleted"
-    result2 = db.session.execute(sql1, {"teacher_id":teacher_id, "visible":"0", "deleted":"0"})
+    result2 = db.session.execute(sql2, {"teacher_id":teacher_id, "visible":"0", "deleted":"0"})
     
     visiblecourses_str = []
     for result in result1:
@@ -99,7 +99,26 @@ def teacher():
 
 @app.route("/student")
 def student():
-    return render_template("student.html")
+    student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    visible_courses = "(SELECT id, code, name, lang, lev, ects, lim FROM courses WHERE visible=:visible AND deleted=:cdeleted)"
+    
+    sql1 = "SELECT c.id, c.code, c.name, c.lang, c.lev, c.ects, c.lim FROM " + visible_courses + " as c, courses_students as cs WHERE c.id = cs.course_id AND cs.student_id=:student_id AND cs.completed=:completed AND cs.deleted=:sdeleted"
+    result1 = db.session.execute(sql1, {"visible":"1", "cdeleted":"0", "student_id":student_id, "completed":"0", "sdeleted":"0"})
+    sql2 = "SELECT c.id, c.code, c.name, c.lang, c.lev, c.ects, c.lim FROM " + visible_courses + " as c, courses_students as cs WHERE c.id = cs.course_id AND cs.student_id=:student_id AND cs.completed=:completed AND cs.deleted=:sdeleted"
+    result2 = db.session.execute(sql2, {"visible":"1", "cdeleted":"0", "student_id":student_id, "completed":"1", "sdeleted":"0"})
+    
+    ongoingcourses_str = []
+    for result in result1:
+        string = result[1] + " " + result[2] + " (" + language_mapping[result[3]] + ", " + level_mapping[result[4]] + ", " + str(result[5]) + " ECTS, " + str(result[6]) + " % to completion)"
+        ongoingcourses_str.append((string, result[0]))
+    completedcourses_str = []
+    for result in result2:
+        string = result[1] + " " + result[2] + " (" + language_mapping[result[3]] + ", " + level_mapping[result[4]] + ", " + str(result[5]) + " ECTS, " + str(result[6]) + " % to completion)"
+        completedcourses_str.append((string, result[0]))
+    ongoingcourses_str.sort()
+    completedcourses_str.sort()
+    
+    return render_template("student.html", ongoingcourses=ongoingcourses_str, completedcourses=completedcourses_str)
 
 @app.route("/logout")
 def logout():
@@ -262,9 +281,65 @@ def deletecourse(id):
     return redirect("/teacher")
 
 
+@app.route("/courses")
+def courses():
+    student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    visible_courses = "(SELECT id, code, name, lang, lev, ects, lim FROM courses WHERE visible=:visible AND deleted=:cdeleted)"
+    enrolled_courses = "(SELECT course_id FROM courses_students WHERE student_id=:student_id)"
+    
+    sql1 = "SELECT vc.id, vc.code, vc.name, vc.lang, vc.lev, vc.ects, vc.lim FROM " + visible_courses + " as vc WHERE vc.id NOT IN " + enrolled_courses
+    sql2 = "(SELECT c.id, c.code, c.name, c.lang, c.lev, c.ects, c.lim FROM " + visible_courses + " as c, courses_students as cs WHERE c.id = cs.course_id AND cs.student_id=:student_id AND cs.deleted=:sdeleted)"
+    sql3 = sql1 + " UNION " + sql2
+    result1 = db.session.execute(sql3, {"visible":"1", "cdeleted":"0", "student_id":student_id, "sdeleted":"1"})
+    sql4 = "SELECT c.id, c.code, c.name, c.lang, c.lev, c.ects, c.lim FROM " + visible_courses + " as c, courses_students as cs WHERE c.id = cs.course_id AND cs.student_id=:student_id AND cs.deleted=:sdeleted"
+    result2 = db.session.execute(sql4, {"visible":"1", "cdeleted":"0", "student_id":student_id, "sdeleted":"0"})
+    
+    newcourses_str = []
+    for result in result1:
+        string = result[1] + " " + result[2] + " (" + language_mapping[result[3]] + ", " + level_mapping[result[4]] + ", " + str(result[5]) + " ECTS, " + str(result[6]) + " % to completion)"
+        newcourses_str.append((string, result[0]))
+    enrolledcourses_str = []
+    for result in result2:
+        string = result[1] + " " + result[2] + " (" + language_mapping[result[3]] + ", " + level_mapping[result[4]] + ", " + str(result[5]) + " ECTS, " + str(result[6]) + " % to completion)"
+        enrolledcourses_str.append((string, result[0]))
+    newcourses_str.sort()
+    enrolledcourses_str.sort()
+    
+    return render_template("courses.html", newcourses=newcourses_str, enrolledcourses=enrolledcourses_str)
 
 
+@app.route("/joincourse/<int:id>")
+def joincourse(id):
+    student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    left_course = db.session.execute("SELECT * FROM courses_students WHERE course_id=:id AND student_id=:student_id", {"id":id, "student_id":student_id}).fetchone()
+    if left_course != None:
+        sql = "UPDATE courses_students SET deleted=:deleted WHERE course_id = :course_id and student_id = :student_id"
+        db.session.execute(sql, {"deleted":"0", "course_id":id, "student_id":student_id})
+    else:
+        sql = "INSERT INTO courses_students (course_id, student_id, completed, deleted) VALUES (:course_id, :student_id, :completed, :deleted)"
+        db.session.execute(sql, {"course_id":id, "student_id":student_id, "completed":"0", "deleted":"0"})
+    db.session.commit()
+    
+    return redirect("/student")
 
+
+@app.route("/quitcourse/<int:id>")
+def quitcourse(id):
+    student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    sql = "SELECT c.code, c.name, c.lang, c.lev, c.ects, c.lim FROM courses as c, courses_students as cs WHERE c.id = cs.course_id AND cs.student_id=:student_id AND c.id=:id"
+    result = db.session.execute(sql, {"student_id":student_id, "id":id}).fetchone()
+    string = result[0] + " " + result[1] + " (" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to completion)"
+    return render_template("quitcourse.html", id=id, course_description=string)
+    
+@app.route("/leavecourse/<int:id>", methods=["POST"])
+def leavecourse(id):
+    leaving = request.form["leaving"]
+    if leaving == "yes":
+        student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+        sql = "UPDATE courses_students SET deleted=:deleted WHERE student_id = :student_id and course_id = :course_id"
+        db.session.execute(sql, {"deleted":"1", "student_id":student_id, "course_id":id})
+        db.session.commit()
+    return redirect("/student")
 
 
 
