@@ -10,7 +10,7 @@ username: {{ session.username }}<br>
 Visible to Students:
 <ul>
 {% for course in visiblecourses %}
-<li> {{ course }}
+<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a>
 {% endfor %}
 </ul>
 </p>
@@ -19,7 +19,7 @@ Visible to Students:
 Hidden from Students:
 <ul>
 {% for course in hiddencourses %}
-<li> {{ course }}
+<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a>
 {% endfor %}
 </ul>
 </p>

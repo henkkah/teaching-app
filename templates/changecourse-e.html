@@ -1,0 +1,29 @@
+<form action="/modifycourse/{{ id }}" method="POST">
+
+<p><b>MODIFY COURSE</b></p>
+
+<p>Course name:<input type="text" name="coursename" value="{{ coursename }}"></p>
+<p>Course code:<input type="text" name="coursecode" value="{{ coursecode }}"></p>
+
+<p>
+Language:
+<input type="radio" name="language" value="ENG"> English
+<input type="radio" name="language" value="FIN" checked> Finnish
+<input type="radio" name="language" value="SWE"> Swedish
+</p>
+
+<p>
+Level:
+<input type="radio" name="level" value="BEG"> Beginner
+<input type="radio" name="level" value="INT" checked> Intermediate
+<input type="radio" name="level" value="ADV"> Advanced
+</p>
+
+<p>ECTS:<input type="number" name="ects" value="{{ ects }}"></p>
+<p>%-limit for completion (e.g. 90):<input type="number" name="limit" value="{{ limit }}"></p>
+
+<p><input type="submit" value="Modify course"></p>
+
+<p><a href="/teacher">Back to Teacher-view</a></p>
+
+</form>
