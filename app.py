@@ -28,7 +28,7 @@ def login():
     result = db.session.execute(sql, {"username":username})
     user = result.fetchone()
     if user == None: # wrong username
-        return render_template("error-username-incorrect.html")
+        return render_template("error-login.html", message="Incorrect username")
     else:
         password_hash = user[0]
         if check_password_hash(password_hash, password): # correct username and password
@@ -39,8 +39,7 @@ def login():
             else: # student
                 return redirect("/student")
         else: # wrong password
-            return render_template("error-password-incorrect.html")
-
+            return render_template("error-login.html", message="Incorrect password")
 @app.route("/newuser")
 def newuser():
     return render_template("newuser.html")
@@ -50,7 +49,7 @@ def createuser():
     username = request.form["username"]
     password = request.form["password"]
     if "teacher" not in request.form:
-        return render_template("error-role-not-chosen.html")
+        return render_template("error-createuser.html", message="Role not chosen")
     else:
         teacher = request.form["teacher"]
     
@@ -59,11 +58,11 @@ def createuser():
     result = db.session.execute(sql, {"username":username})
     user = result.fetchone()
     if user != None or username.strip() == "": # username in use or empty
-        return render_template("error-username-in-use.html")
+        return render_template("error-createuser.html", message="Username already in use")
     
     # Check password
     if password.strip() == "":
-        return render_template("error-password-empty.html")
+        return render_template("error-createuser.html", message="Password empty")
     
     password_hash = generate_password_hash(password)
     sql = "INSERT INTO users (username, password, teacher) VALUES (:username, :password, :teacher)"
@@ -117,11 +116,11 @@ def createcourse():
     coursename = request.form["coursename"]
     coursecode = request.form["coursecode"]
     if "language" not in request.form:
-        return render_template("error-language-not-chosen.html")
+        return render_template("error-createcourse.html", message="Language not chosen")
     else:
         language = request.form["language"]
     if "level" not in request.form:
-        return render_template("error-level-not-chosen.html")
+        return render_template("error-createcourse.html", message="Level not chosen")
     else:
         level = request.form["level"]
     ects = request.form["ects"]
@@ -129,27 +128,27 @@ def createcourse():
     
     # Check coursename
     if coursename.strip() == "":
-        return render_template("error-coursename-not-given.html")
+        return render_template("error-createcourse.html", message="Course name not given")
     # Check coursecode
     sql = "SELECT code FROM courses WHERE code=:coursecode"
     result = db.session.execute(sql, {"coursecode":coursecode})
     code = result.fetchone()
     if code != None or coursecode.strip() == "": # coursecode in use or empty
-        return render_template("error-coursecode-in-use.html")
+        return render_template("error-createcourse.html", message="Course code already in use")
     # Check ects
     try:
         ects = int(ects)
         if ects < 0:
-            return render_template("error-ects-invalid.html")
+            return render_template("error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
     except:
-        return render_template("error-ects-invalid.html")
+        return render_template("error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
     # Check limit
     try:
         limit = int(limit)
         if limit < 0 or limit > 100:
-            return render_template("error-limit-invalid.html")
+            return render_template("error-createcourse.html", message="Completion limit in % entered incorrectly (enter integer, >=0 and <=100)")
     except:
-        return render_template("error-limit-invalid.html")
+        return render_template("error-createcourse.html", message="Completion limit in % entered incorrectly (enter integer, >=0 and <=100)")
 
     # Add new course to db
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
@@ -166,28 +165,21 @@ def changecourse(id):
     sql = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND id=:id"
     result = db.session.execute(sql, {"teacher_id":teacher_id, "id":id}).fetchone()
     
-    
     if result[2] == "SWE":
-        if result[3] == "ADV":
-            return render_template("changecourse-i.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
-        elif result[3] == "INT":
-            return render_template("changecourse-h.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
-        else:
-            return render_template("changecourse-g.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
+        ENG, FIN, SWE = ("", "", "checked")
     elif result[2] == "FIN":
-        if result[3] == "ADV":
-            return render_template("changecourse-f.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
-        elif result[3] == "INT":
-            return render_template("changecourse-e.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
-        else:
-            return render_template("changecourse-d.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
+        ENG, FIN, SWE = ("", "checked", "")
     else:
-        if result[3] == "ADV":
-            return render_template("changecourse-c.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
-        elif result[3] == "INT":
-            return render_template("changecourse-b.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
-        else:
-            return render_template("changecourse-a.html", id=id, coursename=result[1], coursecode=result[0], ects=result[4], limit=result[5])
+        ENG, FIN, SWE = ("checked", "", "")
+    
+    if result[3] == "ADV":
+        BEG, INT, ADV = ("", "", "checked")
+    elif result[3] == "INT":
+        BEG, INT, ADV = ("", "checked", "")
+    else:
+        BEG, INT, ADV = ("checked", "", "")
+    
+    return render_template("changecourse.html", id=id, coursename=result[1], coursecode=result[0], ENG=ENG, FIN=FIN, SWE=SWE, BEG=BEG, INT=INT, ADV=ADV, ects=result[4], limit=result[5])
 
 @app.route("/modifycourse/<int:id>", methods=["POST"])
 def modifycourse(id):
@@ -200,28 +192,28 @@ def modifycourse(id):
     
     # Check coursename
     if coursename.strip() == "":
-        return render_template("error-mod-coursename-not-given.html", id=id)
+        return render_template("error-modifycourse.html", message="Course name not given", id=id)
     # Check coursecode
     old_code = db.session.execute("SELECT code FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
     sql = "SELECT code FROM courses WHERE code=:coursecode"
     result = db.session.execute(sql, {"coursecode":coursecode})
     code = result.fetchone()
     if (code != None and code[0] != old_code) or coursecode.strip() == "": # coursecode in use or empty
-        return render_template("error-mod-coursecode-in-use.html", id=id)
+        return render_template("error-modifycourse.html", message="Course code already in use", id=id)
     # Check ects
     try:
         ects = int(ects)
         if ects < 0:
-            return render_template("error-mod-ects-invalid.html", id=id)
+            return render_template("error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
     except:
-        return render_template("error-mod-ects-invalid.html", id=id)
+        return render_template("error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
     # Check limit
     try:
         limit = int(limit)
         if limit < 0 or limit > 100:
-            return render_template("error-mod-limit-invalid.html", id=id)
+            return render_template("error-modifycourse.html", message="Completion limit in % entered incorrectly (enter integer, >=0 and <=100)", id=id)
     except:
-        return render_template("error-mod-limit-invalid.html", id=id)
+        return render_template("error-modifycourse.html", message="Completion limit in % entered incorrectly (enter integer, >=0 and <=100)", id=id)
 
     # Modify course in db
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
