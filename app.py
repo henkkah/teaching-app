@@ -10,6 +10,9 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.secret_key = getenv("SECRET_KEY")
 db = SQLAlchemy(app)
 
+language_mapping = {"ENG":"English", "FIN":"Finnish", "SWE":"Swedish"}
+level_mapping = {"BEG":"Beginner", "INT":"Intermediate", "ADV":"Advanced"}
+
 
 @app.route("/")
 def index():
@@ -76,7 +79,24 @@ def createuser():
 
 @app.route("/teacher")
 def teacher():
-    return render_template("teacher.html")
+    teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    sql1 = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND visible=:visible AND deleted=:deleted"
+    result1 = db.session.execute(sql1, {"teacher_id":teacher_id, "visible":"1", "deleted":"0"})
+    sql2 = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND visible=:visible AND deleted=:deleted"
+    result2 = db.session.execute(sql1, {"teacher_id":teacher_id, "visible":"0", "deleted":"0"})
+    
+    visiblecourses_str = []
+    for result in result1:
+        string = result[0] + " " + result[1] + " (" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to completion)"
+        visiblecourses_str.append(string)
+    hiddencourses_str = []
+    for result in result2:
+        string = result[0] + " " + result[1] + " (" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to completion)"
+        hiddencourses_str.append(string)
+    visiblecourses_str.sort()
+    hiddencourses_str.sort()
+    
+    return render_template("teacher.html", visiblecourses=visiblecourses_str, hiddencourses=hiddencourses_str)
 
 @app.route("/student")
 def student():

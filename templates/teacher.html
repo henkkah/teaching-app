@@ -4,12 +4,27 @@ username: {{ session.username }}<br>
 <a href="/logout">Log out</a>
 </p>
 
-<p>MY COURSES</p>
-<p>Visible to Students:</p>
+<p>MY COURSES
 
-<p>Hidden from Students:</p>
+<p>
+Visible to Students:
+<ul>
+{% for course in visiblecourses %}
+<li> {{ course }}
+{% endfor %}
+</ul>
+</p>
 
+<p>
+Hidden from Students:
+<ul>
+{% for course in hiddencourses %}
+<li> {{ course }}
+{% endfor %}
+</ul>
+</p>
 
+</p>
 
 
 
