@@ -1,0 +1,35 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p>
+username: {{ session.username }} <br>
+role: teacher <br>
+<a href="/logout"> Log out </a>
+</p>
+<hr>
+
+<p>
+<form action="/teacher/createcourse/action" method="POST">
+
+<h1> Create course </h1>
+<p> Course code: <br> <input type="text" name="coursecode"> </p>
+<p> Course name: <br> <input type="text" name="coursename" size="50"> </p>
+<p> Language: <br>
+<input type="radio" name="language" value="ENG"> English
+<input type="radio" name="language" value="FIN"> Finnish
+<input type="radio" name="language" value="SWE"> Swedish
+</p>
+<p> Level: <br>
+<input type="radio" name="level" value="BAS"> Basic
+<input type="radio" name="level" value="INT"> Intermediate
+<input type="radio" name="level" value="ADV"> Advanced
+</p>
+<p> ECTS: <br> <input type="number" name="ects"> </p>
+<p> % to complete: <br> <input type="number" name="limit"> </p>
+<p> <input type="submit" value="Create course"> </p>
+
+</form>
+</p>
+
+<p>
+<a href="/teacher"> Back to Main page </a>
+</p>

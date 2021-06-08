@@ -1,3 +1,16 @@
-<p>Error: {{ message }}</p>
-<p><a href="/changecourse/{{ id }}">To Modify course -page</a></p>
-<p><a href="/teacher">To Teacher-view</a></p>
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p>
+username: {{ session.username }} <br>
+role: teacher <br>
+<a href="/logout"> Log out </a>
+</p>
+<hr>
+
+<p>
+<p> Error: {{ message }} </p>
+<p>
+<a href="/teacher/modifycourse/{{id}}"> Back to Modify course -page </a> <br>
+<a href="/teacher"> Back to Main page </a>
+</p>
+</p>

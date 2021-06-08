@@ -1,0 +1,30 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p>
+username: {{ session.username }} <br>
+role: teacher <br>
+<a href="/logout"> Log out </a>
+</p>
+<hr>
+
+<p>
+<form action="/teacher/deletecourse/{{id}}/action" method="POST">
+
+<h1> Delete course </h1>
+<p>
+Are you sure you want to permanently delete following course? <br>
+(all data related to the course will be deleted)
+</p>
+<p> {{ course_description }} </p>
+<p>
+<input type="radio" name="deletion" value="yes"> Yes
+<input type="radio" name="deletion" value="no" checked> No
+</p>
+<p> <input type="submit" value="Delete course"> </p>
+
+</form>
+</p>
+
+<p>
+<a href="/teacher"> Back to Main page </a>
+</p>

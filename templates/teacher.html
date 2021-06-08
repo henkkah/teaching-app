@@ -1,33 +1,38 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
 <p>
-TEACHER VIEW<br>
-username: {{ session.username }}<br>
-<a href="/logout">Log out</a>
+username: {{ session.username }} <br>
+role: teacher <br>
+<a href="/logout"> Log out </a>
 </p>
-
-<p>MY COURSES
+<hr>
 
 <p>
-Published to Students:
+<h1> My Courses </h1>
+
+<h2> Published to Students: </h2>
 <ul>
-{% for course in visiblecourses %}
-<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a> <a href="/hidecourse/{{ course[1] }}">Hide course</a> <a href="/removecourse/{{ course[1] }}">Delete course</a>
+{% for course in visible_courses %}
+<li> {{ course[0] }}
+	<a href="/teacher/course/{{course[1]}}"> View course </a> &nbsp;
+	<a href="/teacher/hidecourse/{{course[1]}}"> Hide course </a> &nbsp;
+	<a href="/teacher/modifycourse/{{course[1]}}"> Modify course </a> &nbsp;
+	<a href="/teacher/deletecourse/{{course[1]}}"> Delete course </a> 
+{% endfor %}
+</ul>
+
+<h2> Hidden from Students: </h2>
+<ul>
+{% for course in hidden_courses %}
+<li> {{ course[0] }}
+	<a href="/teacher/course/{{course[1]}}"> View course </a> &nbsp;
+	<a href="/teacher/publishcourse/{{course[1]}}"> Publish course </a> &nbsp;
+	<a href="/teacher/modifycourse/{{course[1]}}"> Modify course </a> &nbsp;
+	<a href="/teacher/deletecourse/{{course[1]}}"> Delete course </a> 
 {% endfor %}
 </ul>
 </p>
 
 <p>
-Hidden from Students:
-<ul>
-{% for course in hiddencourses %}
-<li> {{ course[0] }} <a href="/changecourse/{{ course[1] }}">Modify course</a> <a href="/publishcourse/{{ course[1] }}">Publish course</a> <a href="/removecourse/{{ course[1] }}">Delete course</a>
-{% endfor %}
-</ul>
+<a href="/teacher/createcourse"> Create course </a>
 </p>
-
-</p>
-
-<p><a href="/newcourse">Create new course</a></p>
-
-
-
-

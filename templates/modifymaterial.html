@@ -1,0 +1,16 @@
+<form action="/teacher/course/{{id}}/changematerial" method="POST">
+
+<p><b>MODIFY MATERIAL</b></p>
+
+{{ course_description }}
+
+<textarea name="new_material" rows="100" cols="100">
+{{ old_material }}
+</textarea>
+
+<input type="submit" value="Save material">
+
+<p><a href="/teacher/course/{{id}}">Back to Course-view</a></p>
+<p><a href="/teacher">Back to Teacher-view</a></p>
+
+</form>

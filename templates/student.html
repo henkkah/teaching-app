@@ -1,33 +1,33 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
 <p>
-STUDENT VIEW<br>
-username: {{ session.username }}<br>
-<a href="/logout">Log out</a>
+username: {{ session.username }} <br>
+role: student <br>
+<a href="/logout"> Log out </a>
 </p>
-
-<p>MY COURSES
+<hr>
 
 <p>
-Ongoing:
+<h1> My Courses </h1>
+
+<h2> Ongoing courses: </h2>
 <ul>
-{% for course in ongoingcourses %}
-<li> {{ course[0] }} <a href="/quitcourse/{{ course[1] }}">Leave course</a>
+{% for course in ongoing_courses %}
+<li> {{ course[0] }}
+	<a href="/student/course/{{course[1]}}"> View course </a> &nbsp;
+	<a href="/student/leavecourse/{{course[1]}}"> Leave course </a>
+{% endfor %}
+</ul>
+
+<h2> Completed courses: </h2>
+<ul>
+{% for course in completed_courses %}
+<li> {{ course[0] }}
+	<a href="/student/course/{{course[1]}}"> View course </a>
 {% endfor %}
 </ul>
 </p>
 
 <p>
-Completed:
-<ul>
-{% for course in completedcourses %}
-<li> {{ course[0] }} <a href="/quitcourse/{{ course[1] }}">Leave course</a>
-{% endfor %}
-</ul>
+<a href="/student/courses"> View courses </a>
 </p>
-
-</p>
-
-<p><a href="/courses">View available courses</a></p>
-
-
-
-
