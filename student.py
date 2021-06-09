@@ -14,17 +14,17 @@ def authenticate_for_student_page():
         user_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
         role = db.session.execute("SELECT role FROM users WHERE id=:id", {"id":user_id}).fetchone()[0]
         if role != "student":
-            return redirect("/")
+            return "error1"
         return user_id
-    except: # user not logged in
-        return redirect("/")
+    except: # not logged in
+        return "error0"
 
 
 def authenticate_student_for_course(user_id, course_id):
     enrolled = db.session.execute("SELECT student_id FROM courses_students WHERE student_id=:student_id AND course_id=:course_id", {"student_id":user_id, "course_id":course_id}).fetchone()
     if enrolled == None: # not enrolled
-        return redirect("/")
-    return
+        return "error2"
+    return None
 
 
 def get_course_parameters_for_student(course_id):
@@ -39,7 +39,12 @@ def get_course_parameters_for_student(course_id):
 
 @app.route("/student")
 def student():
+    #Authenticate
     user_id = authenticate_for_student_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
     
     visible_courses = "(SELECT id FROM courses WHERE visible=:visible)"
     
@@ -67,7 +72,12 @@ def student():
 
 @app.route("/student/courses")
 def student_courses():
+    #Authenticate
     user_id = authenticate_for_student_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
     
     student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
     
@@ -97,7 +107,12 @@ def student_courses():
 
 @app.route("/student/joincourse/<int:id>")
 def student_joincourse(id):
+    #Authenticate
     user_id = authenticate_for_student_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
     
     student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
     sql = "INSERT INTO courses_students (course_id, student_id, completed) VALUES (:course_id, :student_id, :completed)"
@@ -109,8 +124,18 @@ def student_joincourse(id):
 
 @app.route("/student/leavecourse/<int:id>")
 def student_leavecourse(id):
+    #Authenticate
     user_id = authenticate_for_student_page()
-    authenticate_student_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
+    if authenticate_student_for_course(user_id, id) == "error2":
+        return redirect("/student")
+    
+    user_id = authenticate_for_student_page()
+    if user_id == "error" or authenticate_student_for_course(user_id, id) == "error":
+        return redirect("/")
     
     parameters = get_course_parameters_for_student(id)
     string = parameters[1] + " " + parameters[2]
@@ -119,8 +144,14 @@ def student_leavecourse(id):
 
 @app.route("/student/leavecourse/<int:id>/action", methods=["POST"])
 def student_leavecourse_action(id):
+    #Authenticate
     user_id = authenticate_for_student_page()
-    authenticate_student_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
+    if authenticate_student_for_course(user_id, id) == "error2":
+        return redirect("/student")
     
     leaving = request.form["leaving"]
     if leaving == "yes":
@@ -135,8 +166,14 @@ def student_leavecourse_action(id):
 
 @app.route("/student/course/<int:id>")
 def student_course(id):
+    #Authenticate
     user_id = authenticate_for_student_page()
-    authenticate_student_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
+    if authenticate_student_for_course(user_id, id) == "error2":
+        return redirect("/student")
     
     # Course parameters
     parameters = get_course_parameters_for_student(id)

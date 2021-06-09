@@ -13,18 +13,18 @@ def authenticate_for_teacher_page():
     try:
         user_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
         role = db.session.execute("SELECT role FROM users WHERE id=:id", {"id":user_id}).fetchone()[0]
-        if role != "teacher":
-            return redirect("/")
+        if role == "student":
+            return "error1"
         return user_id
-    except: # user not logged in
-        return redirect("/")
+    except: # not logged in
+        return "error0"
 
 
 def authenticate_teacher_for_course(user_id, course_id):
     course_teacher = db.session.execute("SELECT teacher_id FROM courses WHERE id=:id", {"id":course_id}).fetchone()[0]
     if user_id != course_teacher: # not own course
-        return redirect("/")
-    return
+        return "error2"
+    return None
 
 
 def get_course_parameters_for_teacher(course_id):
@@ -38,7 +38,12 @@ def get_course_parameters_for_teacher(course_id):
 
 @app.route("/teacher")
 def teacher():
+    #Authenticate
     user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
     
     visible_courses_from_db = db.session.execute("SELECT id FROM courses WHERE teacher_id=:teacher_id AND visible=:visible", {"teacher_id":user_id, "visible":1}).fetchall()
     hidden_courses_from_db = db.session.execute("SELECT id FROM courses WHERE teacher_id=:teacher_id AND visible=:visible", {"teacher_id":user_id, "visible":0}).fetchall()
@@ -61,14 +66,24 @@ def teacher():
 
 @app.route("/teacher/createcourse")
 def teacher_createcourse():
+    #Authenticate
     user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
     
     return render_template("teacher-createcourse.html")
 
 
 @app.route("/teacher/createcourse/action", methods=["POST"])
 def teacher_createcourse_action():
+    #Authenticate
     user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
     
     coursename = request.form["coursename"]
     coursecode = request.form["coursecode"]
@@ -115,8 +130,14 @@ def teacher_createcourse_action():
 
 @app.route("/teacher/publishcourse/<int:id>")
 def teacher_publishcourse(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
     sql = "UPDATE courses SET visible=:visible WHERE teacher_id=:teacher_id and id=:id"
@@ -128,8 +149,14 @@ def teacher_publishcourse(id):
 
 @app.route("/teacher/hidecourse/<int:id>")
 def teacher_hidecourse(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
     sql = "UPDATE courses SET visible=:visible WHERE teacher_id=:teacher_id and id=:id"
@@ -141,8 +168,14 @@ def teacher_hidecourse(id):
 
 @app.route("/teacher/modifycourse/<int:id>")
 def teacher_modifycourse(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
     sql = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE teacher_id=:teacher_id AND id=:id"
@@ -167,8 +200,14 @@ def teacher_modifycourse(id):
 
 @app.route("/teacher/modifycourse/<int:id>/action", methods=["POST"])
 def teacher_modifycourse_action(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     coursename = request.form["coursename"]
     coursecode = request.form["coursecode"]
@@ -209,8 +248,14 @@ def teacher_modifycourse_action(id):
 
 @app.route("/teacher/deletecourse/<int:id>")
 def teacher_deletecourse(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     parameters = get_course_parameters_for_teacher(id)
     string = parameters[1] + " " + parameters[2]
@@ -219,8 +264,14 @@ def teacher_deletecourse(id):
 
 @app.route("/teacher/deletecourse/<int:id>/action", methods=["POST"])
 def teacher_deletecourse_action(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     deletion = request.form["deletion"]
     if deletion == "yes":
@@ -235,8 +286,14 @@ def teacher_deletecourse_action(id):
 
 @app.route("/teacher/course/<int:id>")
 def teacher_course(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     # Course parameters
     parameters = get_course_parameters_for_teacher(id)
@@ -256,8 +313,14 @@ def teacher_course(id):
 
 @app.route("/teacher/course/<int:id>/modifymaterial")
 def teacher_modifymaterial(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
     
     # Course parameters
     parameters = get_course_parameters_for_teacher(id)
@@ -274,8 +337,14 @@ def teacher_modifymaterial(id):
 
 @app.route("/teacher/course/<int:id>/modifymaterial/action", methods=["POST"])
 def teacher_modifymaterial_action(id):
+    #Authenticate
     user_id = authenticate_for_teacher_page()
-    authenticate_teacher_for_course(user_id, id)
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
 
     new_material = request.form["material"]
     print(new_material)
