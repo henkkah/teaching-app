@@ -60,24 +60,24 @@ def teacher():
 
 
 @app.route("/teacher/createcourse")
-def createcourse():
+def teacher_createcourse():
     user_id = authenticate_for_teacher_page()
     
-    return render_template("createcourse.html")
+    return render_template("teacher-createcourse.html")
 
 
 @app.route("/teacher/createcourse/action", methods=["POST"])
-def createcourse_action():
+def teacher_createcourse_action():
     user_id = authenticate_for_teacher_page()
     
     coursename = request.form["coursename"]
     coursecode = request.form["coursecode"]
     if "language" not in request.form:
-        return render_template("error-createcourse.html", message="Language not chosen")
+        return render_template("teacher-error-createcourse.html", message="Language not chosen")
     else:
         language = request.form["language"]
     if "level" not in request.form:
-        return render_template("error-createcourse.html", message="Level not chosen")
+        return render_template("teacher-error-createcourse.html", message="Level not chosen")
     else:
         level = request.form["level"]
     ects = request.form["ects"]
@@ -85,24 +85,24 @@ def createcourse_action():
     
     # Check coursecode
     if coursecode.strip() == "":
-        return render_template("error-createcourse.html", message="Course code not given")
+        return render_template("teacher-error-createcourse.html", message="Course code not given")
     # Check coursename
     if coursename.strip() == "":
-        return render_template("error-createcourse.html", message="Course name not given")
+        return render_template("teacher-error-createcourse.html", message="Course name not given")
     # Check ects
     try:
         ects = int(ects)
         if ects < 0:
-            return render_template("error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
+            return render_template("teacher-error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
     except:
-        return render_template("error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
+        return render_template("teacher-error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
     # Check limit
     try:
         limit = int(limit)
         if limit < 0 or limit > 100:
-            return render_template("error-createcourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)")
+            return render_template("teacher-error-createcourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)")
     except:
-        return render_template("error-createcourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)")
+        return render_template("teacher-error-createcourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)")
 
     # Insert new course into db
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
@@ -114,7 +114,7 @@ def createcourse_action():
 
 
 @app.route("/teacher/publishcourse/<int:id>")
-def publishcourse(id):
+def teacher_publishcourse(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -127,7 +127,7 @@ def publishcourse(id):
 
 
 @app.route("/teacher/hidecourse/<int:id>")
-def hidecourse(id):
+def teacher_hidecourse(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -140,7 +140,7 @@ def hidecourse(id):
 
 
 @app.route("/teacher/modifycourse/<int:id>")
-def modifycourse(id):
+def teacher_modifycourse(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -162,11 +162,11 @@ def modifycourse(id):
     else:
         BAS, INT, ADV = ("checked", "", "")
     
-    return render_template("modifycourse.html", id=id, coursecode=result[0], coursename=result[1], ENG=ENG, FIN=FIN, SWE=SWE, BAS=BAS, INT=INT, ADV=ADV, ects=result[4], limit=result[5])
+    return render_template("teacher-modifycourse.html", id=id, coursecode=result[0], coursename=result[1], ENG=ENG, FIN=FIN, SWE=SWE, BAS=BAS, INT=INT, ADV=ADV, ects=result[4], limit=result[5])
 
 
 @app.route("/teacher/modifycourse/<int:id>/action", methods=["POST"])
-def modifycourse_action(id):
+def teacher_modifycourse_action(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -179,24 +179,24 @@ def modifycourse_action(id):
     
     # Check coursecode
     if coursecode.strip() == "":
-        return render_template("error-modifycourse.html", message="Course code not given", id=id)
+        return render_template("teacher-error-modifycourse.html", message="Course code not given", id=id)
     # Check coursename
     if coursename.strip() == "":
-        return render_template("error-modifycourse.html", message="Course name not given", id=id)
+        return render_template("teacher-error-modifycourse.html", message="Course name not given", id=id)
     # Check ects
     try:
         ects = int(ects)
         if ects < 0:
-            return render_template("error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
+            return render_template("teacher-error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
     except:
-        return render_template("error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
+        return render_template("teacher-error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
     # Check limit
     try:
         limit = int(limit)
         if limit < 0 or limit > 100:
-            return render_template("error-modifycourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)", id=id)
+            return render_template("teacher-error-modifycourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)", id=id)
     except:
-        return render_template("error-modifycourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)", id=id)
+        return render_template("teacher-error-modifycourse.html", message="Limit to complete in % entered incorrectly (enter integer, >=0 and <=100)", id=id)
 
     # Modify course in db
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
@@ -208,17 +208,17 @@ def modifycourse_action(id):
 
 
 @app.route("/teacher/deletecourse/<int:id>")
-def deletecourse(id):
+def teacher_deletecourse(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
     parameters = get_course_parameters_for_teacher(id)
     string = parameters[1] + " " + parameters[2]
-    return render_template("deletecourse.html", id=id, course_description=string)
+    return render_template("teacher-deletecourse.html", id=id, course_description=string)
 
 
 @app.route("/teacher/deletecourse/<int:id>/action", methods=["POST"])
-def deletecourse_action(id):
+def teacher_deletecourse_action(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -234,7 +234,7 @@ def deletecourse_action(id):
 ######################### Functionality for 2nd release #########################
 
 @app.route("/teacher/course/<int:id>")
-def course_teacher(id):
+def teacher_course(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -251,11 +251,11 @@ def course_teacher(id):
     # Course assignments
     
     
-    return render_template("course-teacher.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
+    return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
 
 
 @app.route("/teacher/course/<int:id>/modifymaterial")
-def modifymaterial(id):
+def teacher_modifymaterial(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
     
@@ -269,11 +269,11 @@ def modifymaterial(id):
     else:
         material = material_from_db[0]
     
-    return render_template("modifymaterial.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
+    return render_template("teacher-modifymaterial.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
 
 
 @app.route("/teacher/course/<int:id>/modifymaterial/action", methods=["POST"])
-def modifymaterial_action(id):
+def teacher_modifymaterial_action(id):
     user_id = authenticate_for_teacher_page()
     authenticate_teacher_for_course(user_id, id)
 

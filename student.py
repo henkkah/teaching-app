@@ -66,7 +66,7 @@ def student():
 
 
 @app.route("/student/courses")
-def courses():
+def student_courses():
     user_id = authenticate_for_student_page()
     
     student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
@@ -92,11 +92,11 @@ def courses():
     available_courses.sort()
     enrolled_courses.sort()
     
-    return render_template("courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses)
+    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses)
 
 
 @app.route("/student/joincourse/<int:id>")
-def joincourse(id):
+def student_joincourse(id):
     user_id = authenticate_for_student_page()
     
     student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
@@ -108,17 +108,17 @@ def joincourse(id):
 
 
 @app.route("/student/leavecourse/<int:id>")
-def leavecourse(id):
+def student_leavecourse(id):
     user_id = authenticate_for_student_page()
     authenticate_student_for_course(user_id, id)
     
     parameters = get_course_parameters_for_student(id)
     string = parameters[1] + " " + parameters[2]
-    return render_template("leavecourse.html", id=id, course_description=string)
+    return render_template("student-leavecourse.html", id=id, course_description=string)
 
 
 @app.route("/student/leavecourse/<int:id>/action", methods=["POST"])
-def leavecourse_action(id):
+def student_leavecourse_action(id):
     user_id = authenticate_for_student_page()
     authenticate_student_for_course(user_id, id)
     
@@ -134,7 +134,7 @@ def leavecourse_action(id):
 ######################### Functionality for 2nd release #########################
 
 @app.route("/student/course/<int:id>")
-def course_student(id):
+def student_course(id):
     user_id = authenticate_for_student_page()
     authenticate_student_for_course(user_id, id)
     
@@ -151,7 +151,7 @@ def course_student(id):
     # Course assignments
     
     
-    return render_template("course-student.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
+    return render_template("student-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
 
 
 

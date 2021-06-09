@@ -23,7 +23,7 @@ def login():
     sql = "SELECT password FROM users WHERE username=:username"
     password_in_db = db.session.execute(sql, {"username":username}).fetchone()
     if password_in_db == None: # incorrect username
-        return render_template("error-login.html", message="Incorrect username")
+        return render_template("index-error-login.html", message="Incorrect username")
     else:
         password_hash = password_in_db[0]
         if check_password_hash(password_hash, password): # correct username and password
@@ -34,12 +34,12 @@ def login():
             else: # student
                 return redirect("/student")
         else: # incorrect password
-            return render_template("error-login.html", message="Incorrect password")
+            return render_template("index-error-login.html", message="Incorrect password")
 
 
 @app.route("/createuser")
 def createuser():
-    return render_template("createuser.html")
+    return render_template("index-createuser.html")
 
 
 @app.route("/createuser/action", methods=["POST"])
@@ -47,7 +47,7 @@ def createuser_action():
     username = request.form["username"]
     password = request.form["password"]
     if "role" not in request.form:
-        return render_template("error-createuser.html", message="Role not chosen")
+        return render_template("index-error-createuser.html", message="Role not chosen")
     else:
         role = request.form["role"]
     
@@ -55,11 +55,11 @@ def createuser_action():
     sql = "SELECT username FROM users WHERE username=:username"
     username_in_db = db.session.execute(sql, {"username":username}).fetchone()
     if username_in_db != None or username.strip() == "": # username in use or empty
-        return render_template("error-createuser.html", message="Username in use")
+        return render_template("index-error-createuser.html", message="Username in use")
     
     # Check password
     if password.strip() == "":
-        return render_template("error-createuser.html", message="Password empty")
+        return render_template("index-error-createuser.html", message="Password empty")
     
     # Insert new user into db
     password_hash = generate_password_hash(password)
