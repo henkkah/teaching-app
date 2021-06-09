@@ -309,22 +309,19 @@ def teacher_course(id):
     
     # Course assignments
     assignments_from_db = db.session.execute("SELECT id, question, answer, type_ FROM assignments WHERE course_id=:course_id", {"course_id":id}).fetchall()
-    assignments = [] # (type, question, [choices])
-    if assignments_from_db != None:
-        for assignment_from_db in assignments_from_db:
-            assignment = []
-            assignment_id = assignment_from_db[0]
-            assignments.append(assignment_from_db[1]) # question
-            if assignment_from_db[3] == "multiple_choice":
-                assignments.append(True) # type
-            else:
-                assignments.append(False) # type
-            choices = []
-            choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
-            for choice in choices_from_db:
-                choices.append(choice[0])
-            assignments.append(choices) # choices
-            assignments.append(assignment)
+    assignments = [] # (question, type, [choices])
+    for assignment_from_db in assignments_from_db:
+        assignment_id = assignment_from_db[0]
+        question = assignment_from_db[1]
+        if assignment_from_db[3] == "multiple_choice":
+            type_ = True
+        else:
+            type_ = False
+        choices = []
+        choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
+        for choice in choices_from_db:
+            choices.append(choice[0])
+        assignments.append((question, type_, choices))
     
     return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments)
 
