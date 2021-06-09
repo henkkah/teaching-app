@@ -6,6 +6,7 @@ from app import db
 from app import roles
 from app import language_mapping
 from app import level_mapping
+from app import assignment_types
 from logging_ import logout
 
 
@@ -27,6 +28,7 @@ def authenticate_teacher_for_course(user_id, course_id):
     return None
 
 
+# Returns [course_id, "header", "parameters"]
 def get_course_parameters_for_teacher(course_id):
     parameters = db.session.execute("SELECT code, name, lang, lev, ects, lim FROM courses WHERE id=:id", {"id":course_id}).fetchone()
     return_list = []
@@ -306,9 +308,25 @@ def teacher_course(id):
         material = material_from_db[0]
     
     # Course assignments
+    assignments_from_db = db.session.execute("SELECT id, question, answer, type_ FROM assignments WHERE course_id=:course_id", {"course_id":id}).fetchall()
+    assignments = [] # (type, question, [choices])
+    if assignments_from_db != None:
+        for assignment_from_db in assignments_from_db:
+            assignment = []
+            assignment_id = assignment_from_db[0]
+            assignments.append(assignment_from_db[1]) # question
+            if assignment_from_db[3] == "multiple_choice":
+                assignments.append(True) # type
+            else:
+                assignments.append(False) # type
+            choices = []
+            choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
+            for choice in choices_from_db:
+                choices.append(choice[0])
+            assignments.append(choices) # choices
+            assignments.append(assignment)
     
-    
-    return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
+    return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments)
 
 
 @app.route("/teacher/course/<int:id>/modifymaterial")
@@ -347,16 +365,100 @@ def teacher_modifymaterial_action(id):
         return redirect("/teacher")
 
     new_material = request.form["material"]
-    print(new_material)
     id_in_db = db.session.execute("SELECT id FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
     if id_in_db == None: # no existing material
-        print("ei vielä")
         db.session.execute("INSERT INTO materials (material, course_id) VALUES (:material, :course_id)", {"material":new_material, "course_id":id})
         db.session.commit()
     else:
-        print("oli jo")
         id_in_db = id_in_db[0]
         db.session.execute("UPDATE materials SET material=:material WHERE id=:id", {"material":new_material, "id":id_in_db})
+        db.session.commit()
+    
+    return redirect("/teacher/course/" + str(id))
+
+
+@app.route("/teacher/course/<int:id>/addassignment/multiplechoice")
+def teacher_addassignment_multiplechoice(id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    # Course parameters
+    parameters = get_course_parameters_for_teacher(id)
+    
+    return render_template("teacher-addassignment.html", id=id, header=parameters[1], parameters=parameters[2], type="multiple choice", multiple_choice=True)
+
+
+@app.route("/teacher/course/<int:id>/addassignment/textfield")
+def teacher_addassignment_textfield(id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    # Course parameters
+    parameters = get_course_parameters_for_teacher(id)
+    
+    return render_template("teacher-addassignment.html", id=id, header=parameters[1], parameters=parameters[2], type="text field", multiple_choice=False)
+
+
+@app.route("/teacher/course/<int:id>/addassignment/action", methods=["POST"])
+def teacher_addassignment_action(id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    try: # Multiple choice
+        multiple_choice = request.form["multiple_choice"]
+        choices = []
+        choice_fields = ["choice1", "choice2", "choice3", "choice4", "choice5"]
+        for choice_field in choice_fields:
+            given = request.form[choice_field].strip()
+            if given != "":
+                choices.append(given)
+        if len(choices) <= 1:
+            return render_template("teacher-error-addassignment.html", id=id, message="Give >=2 choices", type="multiplechoice")
+    except: # Text field
+        multiple_choice = False
+    
+    question = request.form["question"]
+    answer = request.form["answer"]
+    if question == "":
+        if multiple_choice:
+            return render_template("teacher-error-addassignment.html", id=id, message="Give question", type="multiplechoice")
+        else:
+            return render_template("teacher-error-addassignment.html", id=id, message="Give question", type="textfield")
+    if answer == "":
+        if multiple_choice:
+            return render_template("teacher-error-addassignment.html", id=id, message="Give answer", type="multiplechoice")
+        else:
+            return render_template("teacher-error-addassignment.html", id=id, message="Give answer", type="textfield")
+
+    # Insert new assignment into db
+    sql = "INSERT INTO assignments (question, answer, type_, course_id) VALUES (:question, :answer, :type_, :course_id)"
+    if multiple_choice:
+        assignment_id = db.session.execute(sql + " RETURNING id", {"question":question, "answer":answer, "type_":"multiple_choice", "course_id":id}).fetchone()[0]
+        db.session.commit()
+        sql2 = "INSERT INTO choices (choice, assignment_id) VALUES (:choice, :assignment_id)"
+        for choice in choices:
+            db.session.execute(sql2, {"choice":choice, "assignment_id":assignment_id})
+            db.session.commit()
+    else: # text_field
+        db.session.execute(sql, {"question":question, "answer":answer, "type_":"text_field", "course_id":id})
         db.session.commit()
     
     return redirect("/teacher/course/" + str(id))

@@ -13,6 +13,7 @@ db = SQLAlchemy(app)
 roles = ["teacher", "student"]
 language_mapping = {"ENG":"English", "FIN":"Finnish", "SWE":"Swedish"}
 level_mapping = {"BAS":"Basic", "INT":"Intermediate", "ADV":"Advanced"}
+assignment_types = ["multiple_choice", "text_field"]
 
 
 import logging_

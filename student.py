@@ -6,6 +6,7 @@ from app import db
 from app import roles
 from app import language_mapping
 from app import level_mapping
+from app import assignment_types
 from logging_ import logout
 
 
@@ -27,6 +28,7 @@ def authenticate_student_for_course(user_id, course_id):
     return None
 
 
+# Returns [course_id, "header", "parameters"]
 def get_course_parameters_for_student(course_id):
     parameters = db.session.execute("SELECT code, name, lang, lev, ects, lim, teacher_id FROM courses WHERE id=:id", {"id":course_id}).fetchone()
     teacher = db.session.execute("SELECT username FROM users WHERE id=:id", {"id":parameters[6]}).fetchone()[0]

@@ -1,0 +1,35 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p><pre>username: {{ session.username }} | role: teacher | <a href="/logout">Log out</a></pre></p>
+<hr>
+
+<p>
+<form action="/teacher/course/{{id}}/addassignment/action" method="POST">
+
+<h1> {{ header }} <br> {{ parameters }} </h1>
+
+<h2> Add assignment ({{ type }})</h2>
+<p> Question: <br> <input type="text" name="question" size="100"> </p>
+<p> Answer: <br> <input type="text" name="answer" size="50"> </p> 
+
+{% if multiple_choice %}
+<p> Choices: <br>
+<input type="text" name="choice1" value="" size="50"> <br>
+<input type="text" name="choice2" value="" size="50"> <br>
+<input type="text" name="choice3" value="" size="50"> <br>
+<input type="text" name="choice4" value="" size="50"> <br>
+<input type="text" name="choice5" value="" size="50"> <br>
+(give as many choices as you want to give to students)
+</p>
+<input type="hidden" name="multiple_choice" value=True>
+{% endif %}
+
+<p> <input type="submit" value="Add assignment"> </p>
+
+</form>
+</p>
+
+<p>
+<a href="/teacher/course/{{id}}"> Back to Course page </a> <br>
+<a href="/teacher"> Back to Main page </a>
+</p>

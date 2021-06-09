@@ -7,6 +7,7 @@ from app import db
 from app import roles
 from app import language_mapping
 from app import level_mapping
+from app import assignment_types
 
 
 @app.route("/")

@@ -13,7 +13,27 @@
 </div>
 
 <h2> Assignments </h2>
+<a href="/teacher/course/{{id}}/addassignment/multiplechoice"> Add Multiple choice -assignment </a> &nbsp;
+<a href="/teacher/course/{{id}}/addassignment/textfield"> Add Text field -assignment </a>
+<div style="border: 1px solid">
+{% for assignment in assignments %}
 
+<h3> assignment[0] </h3>
+
+{% if assignment[1] %}
+
+{% for choice in assignment[2] %}
+<input type="radio" name="answer" value={{ choice }}> choice
+{% endfor %}
+
+{% else %}
+
+<input type="text" name="answer">
+
+{% endif %}
+
+{% endfor %}
+</div>
 </p>
 
 <p>
