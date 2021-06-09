@@ -1,16 +1,27 @@
-<form action="/teacher/course/{{id}}/changematerial" method="POST">
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p>
+username: {{ session.username }} <br>
+role: teacher <br>
+<a href="/logout"> Log out </a>
+</p>
+<hr>
 
-<p><b>MODIFY MATERIAL</b></p>
+<p>
+<form action="/teacher/course/{{id}}/modifymaterial/action" method="POST">
 
-{{ course_description }}
+<h1> {{ header }} <br> {{ parameters }} </h1>
 
-<textarea name="new_material" rows="100" cols="100">
-{{ old_material }}
-</textarea>
-
+<h2> Modify material </h2>
+<p>
+<textarea name="material" rows="25" cols="100">{{ material }}</textarea>
+</p>
 <input type="submit" value="Save material">
 
-<p><a href="/teacher/course/{{id}}">Back to Course-view</a></p>
-<p><a href="/teacher">Back to Teacher-view</a></p>
-
 </form>
+</p>
+
+<p>
+<a href="/teacher/course/{{id}}"> Back to Course page </a> <br>
+<a href="/teacher"> Back to Main page </a>
+</p>

@@ -2,7 +2,7 @@
 <p style="font-size:30px"> TeachingApp </p>
 <p>
 username: {{ session.username }} <br>
-role: teacher <br>
+role: student <br>
 <a href="/logout"> Log out </a>
 </p>
 <hr>
@@ -11,7 +11,6 @@ role: teacher <br>
 <h1> {{ header }} <br> {{ parameters }} </h1>
 
 <h2> Material </h2>
-<a href="/teacher/course/{{id}}/modifymaterial"> Modify material </a>
 <div style="border: 1px solid">
 <pre>{{ material }}</pre>
 </div>
@@ -21,5 +20,5 @@ role: teacher <br>
 </p>
 
 <p>
-<a href="/teacher"> Back to Main page </a>
+<a href="/student"> Back to Main page </a>
 </p>

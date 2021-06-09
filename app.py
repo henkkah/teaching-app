@@ -245,7 +245,7 @@ def modifycourse_action(id):
 
     # Modify course in db
     teacher_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
-    sql = "UPDATE courses SET code=:coursecode, name=:coursename, lang=:language, lev=:level, ects=:ects, lim=:limit WHERE teacher_id = :teacher_id and id = :id"
+    sql = "UPDATE courses SET code=:coursecode, name=:coursename, lang=:language, lev=:level, ects=:ects, lim=:limit WHERE teacher_id=:teacher_id and id=:id"
     db.session.execute(sql, {"coursecode":coursecode, "coursename":coursename, "language":language, "level":level, "ects":ects, "limit":limit, "teacher_id":teacher_id, "id":id})
     db.session.commit()
     
@@ -270,6 +270,101 @@ def deletecourse_action(id):
         db.session.execute(sql, {"teacher_id":teacher_id, "id":id})
         db.session.commit()
     return redirect("/teacher")
+
+
+##### Functionality for 2nd release
+
+@app.route("/teacher/course/<int:id>")
+def course_teacher(id):
+    # Authenticate
+    try:
+        username = session["username"]
+        user_id, role = db.session.execute("SELECT id, role FROM users WHERE username=:username", {"username":username}).fetchone()
+        if role != "teacher":
+            return redirect("/")
+        course_teacher = db.session.execute("SELECT teacher_id FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
+        if course_teacher != user_id: # not own course
+            return redirect("/")
+    except: # user not logged in
+        return redirect("/")
+    
+    # Course parameters
+    sql = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE id=:id"
+    result = db.session.execute(sql, {"id":id}).fetchone()
+    header = result[0] + " " + result[1]
+    parameters = "(" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to complete)"
+    
+    # Course material
+    material_from_db = db.session.execute("SELECT material FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
+    if material_from_db == None:
+        material = ""
+    else:
+        material = material_from_db[0]
+    
+    # Course assignments
+    
+    
+    return render_template("course-teacher.html", id=id, header=header, parameters=parameters, material=material)
+
+
+@app.route("/teacher/course/<int:id>/modifymaterial")
+def modifymaterial(id):
+    # Authenticate
+    try:
+        username = session["username"]
+        user_id, role = db.session.execute("SELECT id, role FROM users WHERE username=:username", {"username":username}).fetchone()
+        if role != "teacher":
+            return redirect("/")
+        course_teacher = db.session.execute("SELECT teacher_id FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
+        if course_teacher != user_id: # not own course
+            return redirect("/")
+    except: # user not logged in
+        return redirect("/")
+    
+    # Course parameters
+    sql = "SELECT code, name, lang, lev, ects, lim FROM courses WHERE id=:id"
+    result = db.session.execute(sql, {"id":id}).fetchone()
+    header = result[0] + " " + result[1]
+    parameters = "(" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to complete)"
+    
+    # Course material
+    material_from_db = db.session.execute("SELECT material FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
+    if material_from_db == None:
+        material = ""
+    else:
+        material = material_from_db[0]
+    
+    return render_template("modifymaterial.html", id=id, header=header, parameters=parameters, material=material)
+
+
+@app.route("/teacher/course/<int:id>/modifymaterial/action", methods=["POST"])
+def modifymaterial_action(id):
+    # Authenticate
+    try:
+        username = session["username"]
+        user_id, role = db.session.execute("SELECT id, role FROM users WHERE username=:username", {"username":username}).fetchone()
+        if role != "teacher":
+            return redirect("/")
+        course_teacher = db.session.execute("SELECT teacher_id FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
+        if course_teacher != user_id: # not own course
+            return redirect("/")
+    except: # user not logged in
+        return redirect("/")
+
+    new_material = request.form["material"]
+    print(new_material)
+    id_in_db = db.session.execute("SELECT id FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
+    if id_in_db == None: # no existing material
+        print("ei vielä")
+        db.session.execute("INSERT INTO materials (material, course_id) VALUES (:material, :course_id)", {"material":new_material, "course_id":id})
+        db.session.commit()
+    else:
+        print("oli jo")
+        id_in_db = id_in_db[0]
+        db.session.execute("UPDATE materials SET material=:material WHERE id=:id", {"material":new_material, "id":id_in_db})
+        db.session.commit()
+    
+    return redirect("/teacher/course/" + str(id))
 
 
 ################################################## STUDENT ##################################################
@@ -371,6 +466,43 @@ def leavecourse_action(id):
         db.session.execute(sql, {"student_id":student_id, "course_id":id})
         db.session.commit()
     return redirect("/student")
+
+
+##### Functionality for 2nd release
+
+@app.route("/student/course/<int:id>")
+def course_student(id):
+    # Authenticate
+    try:
+        username = session["username"]
+        user_id, role = db.session.execute("SELECT id, role FROM users WHERE username=:username", {"username":username}).fetchone()
+        if role != "student":
+            return redirect("/")
+        enrolled = db.session.execute("SELECT student_id FROM courses_students WHERE student_id=:student_id AND course_id=:course_id", {"student_id":user_id, "course_id":id}).fetchone()
+        if enrolled == None: # not enrolled
+            return redirect("/")
+    except: # user not logged in
+        return redirect("/")
+    
+    # Course parameters
+    sql = "SELECT code, name, lang, lev, ects, lim, teacher_id FROM courses WHERE id=:id"
+    result = db.session.execute(sql, {"id":id}).fetchone()
+    teacher_id = result[6]
+    teacher = db.session.execute("SELECT username FROM users WHERE id=:id", {"id":teacher_id}).fetchone()[0]
+    header = result[0] + " " + result[1]
+    parameters = "(" + language_mapping[result[2]] + ", " + level_mapping[result[3]] + ", " + str(result[4]) + " ECTS, " + str(result[5]) + " % to complete, teacher: " + teacher + ")"
+    
+    # Course material
+    material_from_db = db.session.execute("SELECT material FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
+    if material_from_db == None:
+        material = ""
+    else:
+        material = material_from_db[0]
+    
+    # Course assignments
+    
+    
+    return render_template("course-student.html", id=id, header=header, parameters=parameters, material=material)
 
 
 
