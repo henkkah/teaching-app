@@ -48,6 +48,23 @@ def student():
     elif user_id == "error1":
         return redirect("/teacher")
     
+    # Check if any course should be marked completed for student
+    students_courses = db.session.execute("SELECT id, course_id, completed FROM courses_students WHERE student_id=:student_id", {"student_id":user_id}).fetchall()
+    for course in students_courses: # "course" has fields: (id, course_id, completed)
+        completion_limit = db.session.execute("SELECT lim FROM courses WHERE id=:id", {"id":course[1]}).fetchone()[0]
+        
+        course_assignments_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
+        students_correct_attempts_sql = "SELECT assignment_id FROM attempts WHERE student_id=:student_id AND assignment_id IN " + course_assignments_sql + " AND correct=:correct"
+        
+        course_assignments = db.session.execute(course_assignments_sql, {"course_id":course[1]}).fetchall()
+        students_correct_attempts = db.session.execute(students_correct_attempts_sql, {"student_id":user_id, "course_id":course[1], "correct":1}).fetchall()
+        students_correct_attempts = set(students_correct_attempts)
+        
+        if (100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit) and (course[2] == 0):
+            db.session.execute("UPDATE courses_students SET completed=:completed WHERE id=:id", {"completed":1, "id":course[0]})
+            db.session.commit()
+    # Check ends
+    
     visible_courses = "(SELECT id FROM courses WHERE visible=:visible)"
     
     ongoing_courses_sql = "SELECT vc.id FROM " + visible_courses + " as vc, courses_students as cs WHERE vc.id = cs.course_id AND cs.student_id=:user_id AND cs.completed=:completed"
@@ -177,8 +194,31 @@ def student_course(id):
     if authenticate_student_for_course(user_id, id) == "error2":
         return redirect("/student")
     
+    # Check if course should be marked completed for student
+    row_id, completed = db.session.execute("SELECT id, completed FROM courses_students WHERE student_id=:student_id AND course_id=:course_id", {"student_id":user_id, "course_id":id}).fetchone()
+    
+    completion_limit = db.session.execute("SELECT lim FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
+    
+    course_assignments_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
+    students_correct_attempts_sql = "SELECT assignment_id FROM attempts WHERE student_id=:student_id AND assignment_id IN " + course_assignments_sql + " AND correct=:correct"
+    
+    course_assignments = db.session.execute(course_assignments_sql, {"course_id":id}).fetchall()
+    students_correct_attempts = db.session.execute(students_correct_attempts_sql, {"student_id":user_id, "course_id":id, "correct":1}).fetchall()
+    students_correct_attempts = set(students_correct_attempts)
+    
+    if (100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit) and (completed == 0):
+        db.session.execute("UPDATE courses_students SET completed=:completed WHERE id=:id", {"completed":1, "id":row_id})
+        db.session.commit()
+    # Check ends
+    
     # Course parameters
     parameters = get_course_parameters_for_student(id)
+    
+    completed = db.session.execute("SELECT completed FROM courses_students WHERE course_id=:course_id AND student_id=:student_id", {"course_id":id, "student_id":user_id}).fetchone()[0]
+    if completed == 1:
+        completed = True
+    else:
+        completed = False
     
     # Course material
     material_from_db = db.session.execute("SELECT material FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
@@ -214,7 +254,7 @@ def student_course(id):
         len_attempts = len(attempts)
         assignments.append((assignment_id, question, type_, choices, correct, len_attempts, answer))
     
-    return render_template("student-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments)
+    return render_template("student-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments, completed=completed)
 
 
 @app.route("/student/course/<int:id>/answerassignment/<int:assignment_id>/action", methods=["POST"])

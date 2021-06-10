@@ -6,6 +6,12 @@
 <p>
 <h1> {{ header }} <br> {{ parameters }} </h1>
 
+{% if completed %}
+<p style="color:green;font-size:30px"> Course completed </p>
+{% else %}
+<p style="color:red;font-size:30px"> Course not completed </p>
+{% endif %}
+
 <h2> Material </h2>
 <div style="border: 1px solid">
 <pre>{{ material }}</pre>
