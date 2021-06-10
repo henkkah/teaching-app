@@ -43,23 +43,30 @@ Courses contain study material and assignments which are automatically graded by
 
 ## Testing on Heroku
 
-TeachingApp can be tested on [Heroku](https://teaching-app-henkkah.herokuapp.com/).  
-One can use test accounts [username: student_test - password: test] and [username: teacher_test - password: test] when testing app.  
-- One can log in with existing user account or create new user account
-- With role 'Student' one can
--- see list of available courses and join them
--- see list of enrolled and completed courses
--- leave courses
--- study course materials
--- do course assignments and get automatic grading
--- get course completion when enough assignments completed
-- With role 'Teacher' one can
--- create courses
--- see list of own courses
--- publish/hide/delete courses
--- modify course parameters
--- add/modify/delete assignments for courses
--- add/modify/delete multiple-choice and text-field assignments for courses
+TeachingApp can be tested [on Heroku](https://teaching-app-henkkah.herokuapp.com/).
+- One can use following test accounts when testing app:
+    - role 'Student':
+        - username: student_test
+        - password: test
+    - role 'Teacher':
+        - username: teacher_test
+        - password: test
+- Available functionalities:
+    - One can log in with existing user account or create new user account
+    - With role 'Student' one can
+        - see list of available courses and join them
+        - see list of enrolled and completed courses
+        - leave courses
+        - study course materials
+        - do course assignments and get automatic grading
+        - get course completion when enough assignments completed
+    - With role 'Teacher' one can
+        - create courses
+        - see list of own courses
+        - publish/hide/delete courses
+        - modify course parameters
+        - add/modify/delete assignments for courses
+        - add/modify/delete multiple-choice and text-field assignments for courses
 
 
 
