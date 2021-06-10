@@ -1,0 +1,35 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p><pre>username: {{ session.username }} | role: teacher | <a href="/logout">Log out</a></pre></p>
+<hr>
+
+<p>
+<form action="/teacher/course/{{id}}/modifyassignment/{{assignment_id}}/action" method="POST">
+
+<h1> {{ header }} <br> {{ parameters }} </h1>
+
+<h2> Modify assignment ({{ type }}) </h2>
+<p> Question: <br> <input type="text" name="question" value="{{old_question}}" size="100"> </p>
+<p> Answer: <br> <input type="text" name="answer" value="{{old_answer}}" size="50"> </p> 
+
+{% if multiple_choice %}
+<p> Choices: <br>
+<input type="text" name="choice1" value="{{old_choice1}}" size="50"> <br>
+<input type="text" name="choice2" value="{{old_choice2}}" size="50"> <br>
+<input type="text" name="choice3" value="{{old_choice3}}" size="50"> <br>
+<input type="text" name="choice4" value="{{old_choice4}}" size="50"> <br>
+<input type="text" name="choice5" value="{{old_choice5}}" size="50"> <br>
+(give as many choices as you want to give to students)
+</p>
+<input type="hidden" name="multiple_choice" value=True>
+{% endif %}
+
+<p> <input type="submit" value="Modify assignment"> </p>
+
+</form>
+</p>
+
+<p>
+<a href="/teacher/course/{{id}}"> Back to Course page </a> <br>
+<a href="/teacher"> Back to Main page </a>
+</p>

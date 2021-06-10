@@ -1,0 +1,48 @@
+<title> TeachingApp </title>
+<p style="font-size:30px"> TeachingApp </p>
+<p><pre>username: {{ session.username }} | role: teacher | <a href="/logout">Log out</a></pre></p>
+<hr>
+
+<p>
+<form action="/teacher/course/{{id}}/deleteassignment/{{assignment_id}}/action" method="POST">
+
+<h1> {{ header }} <br> {{ parameters }} </h1>
+
+<h2> Delete assignment ({{ type }}) </h2>
+
+<p>
+Are you sure you want to delete following assignment? <br>
+(all data related to the assignment will be deleted)
+</p>
+
+<div style="border: 1px solid grey; padding: 5px"> <p>
+<h3> {{ question }} </h3>
+
+{% if multiple_choice %}
+
+{% for choice in choices %}
+<input type="radio" name="answer" value={{ choice }}> {{ choice }}
+{% endfor %}
+<input type="hidden" name="multiple_choice" value=True>
+
+{% else %}
+
+<input type="text" name="answer" size="50">
+
+{% endif %}
+</p> </div>
+
+<p>
+<input type="radio" name="deletion" value="yes"> Yes
+<input type="radio" name="deletion" value="no" checked> No
+</p>
+
+<p> <input type="submit" value="Delete assignment"> </p>
+
+</form>
+</p>
+
+<p>
+<a href="/teacher/course/{{id}}"> Back to Course page </a> <br>
+<a href="/teacher"> Back to Main page </a>
+</p>

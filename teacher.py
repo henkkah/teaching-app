@@ -321,7 +321,7 @@ def teacher_course(id):
         choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
         for choice in choices_from_db:
             choices.append(choice[0])
-        assignments.append((question, type_, choices))
+        assignments.append((assignment_id, question, type_, choices))
     
     return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments)
 
@@ -457,6 +457,176 @@ def teacher_addassignment_action(id):
     else: # text_field
         db.session.execute(sql, {"question":question, "answer":answer, "type_":"text_field", "course_id":id})
         db.session.commit()
+    
+    return redirect("/teacher/course/" + str(id))
+
+
+@app.route("/teacher/course/<int:id>/modifyassignment/multiplechoice/<int:assignment_id>")
+def teacher_modifyassignment_multiplechoice(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    # Course parameters
+    parameters = get_course_parameters_for_teacher(id)
+    
+    # Old assignment
+    old_question, old_answer = db.session.execute("SELECT question, answer FROM assignments WHERE id=:id", {"id":assignment_id}).fetchone()
+    old_choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
+    old_choices = [choice[0] for choice in old_choices_from_db]
+    for i in range(5-len(old_choices)):
+        old_choices.append("")
+    
+    return render_template("teacher-modifyassignment.html", id=id, header=parameters[1], parameters=parameters[2], type="multiple choice", multiple_choice=True, assignment_id=assignment_id, \
+                           old_question=old_question, old_answer=old_answer, old_choice1=old_choices[0], old_choice2=old_choices[1], old_choice3=old_choices[2], old_choice4=old_choices[3], old_choice5=old_choices[4])
+
+
+@app.route("/teacher/course/<int:id>/modifyassignment/textfield/<int:assignment_id>")
+def teacher_modifyassignment_textfield(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    # Course parameters
+    parameters = get_course_parameters_for_teacher(id)
+    
+    # Old assignment
+    old_question, old_answer = db.session.execute("SELECT question, answer FROM assignments WHERE id=:id", {"id":assignment_id}).fetchone()
+    
+    return render_template("teacher-modifyassignment.html", id=id, header=parameters[1], parameters=parameters[2], type="text field", multiple_choice=False, assignment_id=assignment_id, \
+                           old_question=old_question, old_answer=old_answer)
+
+
+@app.route("/teacher/course/<int:id>/modifyassignment/<int:assignment_id>/action", methods=["POST"])
+def teacher_modifyassignment_action(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    try: # Multiple choice
+        multiple_choice = request.form["multiple_choice"]
+        choices = []
+        choice_fields = ["choice1", "choice2", "choice3", "choice4", "choice5"]
+        for choice_field in choice_fields:
+            given = request.form[choice_field].strip()
+            if given != "":
+                choices.append(given)
+        if len(choices) <= 1:
+            return render_template("teacher-error-modifyassignment.html", id=id, message="Give >=2 choices", type="multiplechoice", assignment_id=assignment_id)
+    except: # Text field
+        multiple_choice = False
+    
+    question = request.form["question"]
+    answer = request.form["answer"]
+    if question == "":
+        if multiple_choice:
+            return render_template("teacher-error-modifyassignment.html", id=id, message="Give question", type="multiplechoice", assignment_id=assignment_id)
+        else:
+            return render_template("teacher-error-modifyassignment.html", id=id, message="Give question", type="textfield", assignment_id=assignment_id)
+    if answer == "":
+        if multiple_choice:
+            return render_template("teacher-error-modifyassignment.html", id=id, message="Give answer", type="multiplechoice", assignment_id=assignment_id)
+        else:
+            return render_template("teacher-error-modifyassignment.html", id=id, message="Give answer", type="textfield", assignment_id=assignment_id)
+
+    # Modify assignment in db
+    sql = "UPDATE assignments SET question=:question, answer=:answer WHERE id=:id"
+    db.session.execute(sql, {"question":question, "answer":answer, "id":assignment_id})
+    db.session.commit()
+    
+    if multiple_choice:
+        db.session.execute("DELETE FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id})
+        db.session.commit()
+        sql2 = "INSERT INTO choices (choice, assignment_id) VALUES (:choice, :assignment_id)"
+        for choice in choices:
+            db.session.execute(sql2, {"choice":choice, "assignment_id":assignment_id})
+            db.session.commit()
+    
+    return redirect("/teacher/course/" + str(id))
+
+
+@app.route("/teacher/course/<int:id>/deleteassignment/multiplechoice/<int:assignment_id>")
+def teacher_deleteassignment_multiplechoice(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    # Course parameters
+    parameters = get_course_parameters_for_teacher(id)
+    
+    # Assignment
+    question = db.session.execute("SELECT question, answer FROM assignments WHERE id=:id", {"id":assignment_id}).fetchone()[0]
+    choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
+    choices = [choice[0] for choice in choices_from_db]
+    
+    return render_template("teacher-deleteassignment.html", id=id, header=parameters[1], parameters=parameters[2], type="multiple choice", multiple_choice=True, assignment_id=assignment_id, question=question, choices=choices)
+
+
+@app.route("/teacher/course/<int:id>/deleteassignment/textfield/<int:assignment_id>")
+def teacher_deleteassignment_textfield(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    # Course parameters
+    parameters = get_course_parameters_for_teacher(id)
+    
+    # Assignment
+    question = db.session.execute("SELECT question, answer FROM assignments WHERE id=:id", {"id":assignment_id}).fetchone()[0]
+    
+    return render_template("teacher-deleteassignment.html", id=id, header=parameters[1], parameters=parameters[2], type="text field", multiple_choice=False, assignment_id=assignment_id, question=question)
+
+
+@app.route("/teacher/course/<int:id>/deleteassignment/<int:assignment_id>/action", methods=["POST"])
+def teacher_deleteassignment_action(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_teacher_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/student")
+    if authenticate_teacher_for_course(user_id, id) == "error2":
+        return redirect("/teacher")
+    
+    deletion = request.form["deletion"]
+    
+    try: # Multiple choice
+        multiple_choice = request.form["multiple_choice"]    
+    except: # Text field
+        multiple_choice = False
+    
+    if deletion == "yes":
+        db.session.execute("DELETE FROM assignments WHERE id=:id", {"id":assignment_id})
+        db.session.commit()
+        
+        if multiple_choice:
+            db.session.execute("DELETE FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id})
+            db.session.commit()
     
     return redirect("/teacher/course/" + str(id))
 
