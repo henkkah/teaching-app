@@ -186,7 +186,9 @@ def student_course(id):
     students_correct_attempts_sql = "SELECT assignment_id FROM attempts WHERE student_id=:student_id AND assignment_id IN " + course_assignments_sql + " AND correct=:correct"
     
     course_assignments = db.session.execute(course_assignments_sql, {"course_id":id}).fetchall()
+    course_assignments = [course_assignment[0] for course_assignment in course_assignments]
     students_correct_attempts = db.session.execute(students_correct_attempts_sql, {"student_id":user_id, "course_id":id, "correct":1}).fetchall()
+    students_correct_attempts = [students_correct_attempt[0] for students_correct_attempt in students_correct_attempts]
     students_correct_attempts = set(students_correct_attempts)
     
     if (100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit) and (completed == 0):
