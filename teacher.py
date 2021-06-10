@@ -362,6 +362,10 @@ def teacher_modifymaterial_action(id):
         return redirect("/teacher")
 
     new_material = request.form["material"]
+    
+    if len(new_material) > 10000:
+        return render_template("teacher-error-modifymaterial.html", id=id, message="Maximum length of material for a course is 10 000 characters")
+    
     id_in_db = db.session.execute("SELECT id FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
     if id_in_db == None: # no existing material
         db.session.execute("INSERT INTO materials (material, course_id) VALUES (:material, :course_id)", {"material":new_material, "course_id":id})
