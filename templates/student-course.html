@@ -12,7 +12,50 @@
 </div>
 
 <h2> Assignments </h2>
+<div style="border: 1px solid; padding: 10px">
 
+{% for assignment in assignments %}
+<form action="/student/course/{{id}}/answerassignment/{{assignment[0]}}/action" method="POST">
+<div style="border: 1px solid grey; padding: 5px"> <p>
+<h3> {{ assignment[1] }} </h3>
+
+{% if assignment[4] %}
+
+<p style="color:green;"> Completed [{{assignment[5]}} attempts] </p>
+
+{% if assignment[2] %}
+{% for choice in assignment[3] %}
+<input type="radio" name="answer" value="{{choice[0]}}" {{choice[1]}}>{{choice[0]}}
+{% endfor %}
+<input type="hidden" name="multiple_choice" value=True>
+{% else %}
+<input type="text" name="answer" value="{{assignment[6]}}" size="50">
+{% endif %}
+
+{% else %}
+
+<p style="color:red;"> Not completed [{{assignment[5]}} attempts] </p>
+
+{% if assignment[2] %}
+{% for choice in assignment[3] %}
+<input type="radio" name="answer" value="{{choice[0]}}">{{choice[0]}}
+{% endfor %}
+<input type="hidden" name="multiple_choice" value=True>
+{% else %}
+<input type="text" name="answer" size="50">
+{% endif %}
+
+{% endif %}
+
+
+
+<p> <input type="submit" value="Answer"> </p>
+
+</p> </div>
+</form>
+{% endfor %}
+
+</div>
 </p>
 
 <p>

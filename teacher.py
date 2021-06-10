@@ -309,7 +309,7 @@ def teacher_course(id):
     
     # Course assignments
     assignments_from_db = db.session.execute("SELECT id, question, answer, type_ FROM assignments WHERE course_id=:course_id", {"course_id":id}).fetchall()
-    assignments = [] # (question, type, [choices])
+    assignments = [] # (assignment_id, question, type, [choices])
     for assignment_from_db in assignments_from_db:
         assignment_id = assignment_from_db[0]
         question = assignment_from_db[1]

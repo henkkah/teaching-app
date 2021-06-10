@@ -188,9 +188,62 @@ def student_course(id):
         material = material_from_db[0]
     
     # Course assignments
+    assignments_from_db = db.session.execute("SELECT id, question, answer, type_ FROM assignments WHERE course_id=:course_id", {"course_id":id}).fetchall()
+    assignments = [] # (assignment_id, question, type, [choices], correct, attempts, answer)
+    for assignment_from_db in assignments_from_db:
+        assignment_id = assignment_from_db[0]
+        question = assignment_from_db[1]
+        answer = assignment_from_db[2]
+        if assignment_from_db[3] == "multiple_choice":
+            type_ = True
+        else:
+            type_ = False
+        choices = []
+        choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
+        for choice in choices_from_db:
+            if choice[0] == answer:
+                choices.append((choice[0], "checked"))
+            else:
+                choices.append((choice[0], ""))
+        attempts = db.session.execute("SELECT correct FROM attempts WHERE assignment_id=:assignment_id AND student_id=:student_id", {"assignment_id":assignment_id, "student_id":user_id}).fetchall()
+        attempts = [attempt[0] for attempt in attempts]
+        if sum(attempts) >= 1:
+            correct = True
+        else:
+            correct = False
+        len_attempts = len(attempts)
+        assignments.append((assignment_id, question, type_, choices, correct, len_attempts, answer))
     
+    return render_template("student-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments)
+
+
+@app.route("/student/course/<int:id>/answerassignment/<int:assignment_id>/action", methods=["POST"])
+def student_answerassignment_action(id, assignment_id):
+    #Authenticate
+    user_id = authenticate_for_student_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
+    if authenticate_student_for_course(user_id, id) == "error2":
+        return redirect("/student")
     
-    return render_template("student-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material)
+    if "answer" not in request.form:
+        return render_template("/student/course/" + str(id))
+    answer = request.form["answer"]
+    
+    # Check answer and insert attempt into db
+    correct_answer = db.session.execute("SELECT answer FROM assignments WHERE id=:id", {"id":assignment_id}).fetchone()[0]
+    if answer == correct_answer:
+        sql = "INSERT INTO attempts (assignment_id, student_id, answer, correct, time_) VALUES (:assignment_id, :student_id, :answer, :correct, NOW())"
+        db.session.execute(sql, {"assignment_id":assignment_id, "student_id":user_id, "answer":answer, "correct":1})
+        db.session.commit()
+    else: # incorrect answer
+        sql = "INSERT INTO attempts (assignment_id, student_id, answer, correct, time_) VALUES (:assignment_id, :student_id, :answer, :correct, NOW())"
+        db.session.execute(sql, {"assignment_id":assignment_id, "student_id":user_id, "answer":answer, "correct":0})
+        db.session.commit()
+    
+    return redirect("/student/course/" + str(id))
 
 
 
