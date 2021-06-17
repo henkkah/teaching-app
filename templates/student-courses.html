@@ -6,6 +6,27 @@
 <p>
 <h1> All Courses </h1>
 
+{% if search_or_filter %}
+<form action="/student/courses">
+<p style="color:blue">
+
+FILTER: 
+
+{% if search %}
+keyword '{{query}}'
+{% endif %}
+
+&nbsp; <input type="submit" value="Clear filter">
+
+</p>
+</form>
+{% endif %}
+
+<form action="/student/courses/search" method="GET">
+Keyword: <input type="text" name="query"> <br><br>
+<input type="submit" value="Search">
+</form>
+
 <h2> Available courses: </h2>
 <ul>
 {% for course in available_courses %}

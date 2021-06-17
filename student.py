@@ -143,6 +143,57 @@ def student_courses():
     return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses)
 
 
+@app.route("/student/courses/search")
+def student_courses_search():
+    #Authenticate
+    user_id = authenticate_for_student_page()
+    if user_id == "error0":
+        return redirect("/")
+    elif user_id == "error1":
+        return redirect("/teacher")
+    
+    query = request.args["query"]
+    query_c = query.lower().strip()
+    if query_c == "":
+        search = False
+        search_or_filter = False
+    else:
+        search = True
+        search_or_filter = True
+        found = []
+        courses = db.session.execute("SELECT id, code, name FROM courses").fetchall()
+        for course in courses:
+            if query_c in course[1].lower() or query_c in course[2].lower():
+                found.append(course[0])
+    
+    student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
+    
+    visible_courses = "(SELECT id FROM courses WHERE visible=:visible)"
+    
+    enrolled_courses_sql = "(SELECT course_id FROM courses_students WHERE student_id=:student_id AND course_id IN " + visible_courses + ")"
+    available_courses_sql = "(SELECT vc.id FROM " + visible_courses + " as vc WHERE vc.id NOT IN " + enrolled_courses_sql + ")"
+    
+    enrolled_courses_from_db = db.session.execute(enrolled_courses_sql, {"visible":1, "student_id":student_id}).fetchall()
+    available_courses_from_db = db.session.execute(available_courses_sql, {"visible":1, "student_id":student_id}).fetchall()
+    
+    available_courses = []
+    for course in available_courses_from_db:
+        id, header, parameters = get_course_parameters_for_student(course[0])
+        if (not search) or (search and id in found):
+            string = header + " " + parameters
+            available_courses.append((string, id))
+    enrolled_courses = []
+    for course in enrolled_courses_from_db:
+        id, header, parameters = get_course_parameters_for_student(course[0])
+        if (not search) or (search and id in found):
+            string = header + " " + parameters
+            enrolled_courses.append((string, id))
+    available_courses.sort()
+    enrolled_courses.sort()
+    
+    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses, search_or_filter=search_or_filter, search=search, query=query)
+
+
 @app.route("/student/joincourse/<int:id>")
 def student_joincourse(id):
     #Authenticate
