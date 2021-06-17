@@ -39,6 +39,20 @@ def get_course_parameters_for_student(course_id):
     return return_list
 
 
+# Returns [courses, completed]
+def get_course_statistics_for_student1(student_id):
+    courses, completed = db.session.execute("SELECT COUNT(id), SUM(completed) FROM courses_students WHERE student_id=:student_id", {"student_id":student_id}).fetchone()
+    return (courses, completed)
+
+
+# Returns [attempts, correct]
+def get_course_statistics_for_student2(course_id):
+    assignments_on_course_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
+    attempts_on_course_sql = "SELECT COUNT(id), SUM(correct) FROM attempts WHERE assignment_id IN " + assignments_on_course_sql
+    attempts, correct = db.session.execute(attempts_on_course_sql, {"course_id":course_id}).fetchone()
+    return (attempts, correct)
+
+
 @app.route("/student")
 def student():
     #Authenticate
@@ -47,6 +61,10 @@ def student():
         return redirect("/")
     elif user_id == "error1":
         return redirect("/teacher")
+    
+    # Stats
+    statistics = get_course_statistics_for_student1(user_id)
+    stats = str(statistics[0]) + " enrollments to courses, " + str(statistics[1]) + " completed"
     
     visible_courses = "(SELECT id FROM courses WHERE visible=:visible)"
     
@@ -59,17 +77,21 @@ def student():
     ongoing_courses = []
     for course in ongoing_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
+        statistics_c = get_course_statistics_for_student2(course[0])
         string = header + " " + parameters
-        ongoing_courses.append((string, id))
+        stats_c = str(statistics[0]) + " attempts on assignments, " + str(statistics[1]) + " correct"
+        ongoing_courses.append((string, stats_c, id))
     completed_courses = []
     for course in completed_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
+        statistics_c = get_course_statistics_for_student2(course[0])
         string = header + " " + parameters
-        completed_courses.append((string, id))
+        stats_c = str(statistics[0]) + " attempts on assignments, " + str(statistics[1]) + " correct"
+        completed_courses.append((string, stats_c, id))
     ongoing_courses.sort()
     completed_courses.sort()
     
-    return render_template("student.html", ongoing_courses=ongoing_courses, completed_courses=completed_courses)
+    return render_template("student.html", ongoing_courses=ongoing_courses, completed_courses=completed_courses, stats=stats)
 
 
 @app.route("/student/courses")

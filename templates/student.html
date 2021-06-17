@@ -4,14 +4,15 @@
 <hr>
 
 <p>
-<h1> My Courses </h1>
+<h1> My Courses <br> <div style="color:green;font-size:25px"> {{ stats }} </div> </h1>
 
 <h2> Ongoing courses: </h2>
 <ul>
 {% for course in ongoing_courses %}
 <li> {{ course[0] }}
-	<a href="/student/course/{{course[1]}}"> View course </a> &nbsp;
-	<a href="/student/leavecourse/{{course[1]}}"> Leave course </a>
+	<a href="/student/course/{{course[2]}}"> View course </a> &nbsp;
+	<a href="/student/leavecourse/{{course[2]}}"> Leave course </a> <br>
+	<div style="color:green;"> {{ course[1] }} </div>
 {% endfor %}
 </ul>
 
@@ -19,7 +20,8 @@
 <ul>
 {% for course in completed_courses %}
 <li> {{ course[0] }}
-	<a href="/student/course/{{course[1]}}"> View course </a>
+	<a href="/student/course/{{course[2]}}"> View course </a> <br>
+	<div style="color:green;"> {{ course[1] }} </div>
 {% endfor %}
 </ul>
 </p>
