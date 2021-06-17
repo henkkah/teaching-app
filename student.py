@@ -180,20 +180,21 @@ def student_course(id):
     # Check if course should be marked completed
     row_id, completed = db.session.execute("SELECT id, completed FROM courses_students WHERE student_id=:student_id AND course_id=:course_id", {"student_id":user_id, "course_id":id}).fetchone()
     
-    completion_limit = db.session.execute("SELECT lim FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
-    
-    course_assignments_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
-    students_correct_attempts_sql = "SELECT assignment_id FROM attempts WHERE student_id=:student_id AND assignment_id IN " + course_assignments_sql + " AND correct=:correct"
-    
-    course_assignments = db.session.execute(course_assignments_sql, {"course_id":id}).fetchall()
-    course_assignments = [course_assignment[0] for course_assignment in course_assignments]
-    students_correct_attempts = db.session.execute(students_correct_attempts_sql, {"student_id":user_id, "course_id":id, "correct":1}).fetchall()
-    students_correct_attempts = [students_correct_attempt[0] for students_correct_attempt in students_correct_attempts]
-    students_correct_attempts = set(students_correct_attempts)
-    
-    if (100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit) and (completed == 0):
-        db.session.execute("UPDATE courses_students SET completed=:completed WHERE id=:id", {"completed":1, "id":row_id})
-        db.session.commit()
+    if completed == 0:
+        completion_limit = db.session.execute("SELECT lim FROM courses WHERE id=:id", {"id":id}).fetchone()[0]
+        
+        course_assignments_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
+        students_correct_attempts_sql = "SELECT assignment_id FROM attempts WHERE student_id=:student_id AND assignment_id IN " + course_assignments_sql + " AND correct=:correct"
+        
+        course_assignments = db.session.execute(course_assignments_sql, {"course_id":id}).fetchall()
+        course_assignments = [course_assignment[0] for course_assignment in course_assignments]
+        students_correct_attempts = db.session.execute(students_correct_attempts_sql, {"student_id":user_id, "course_id":id, "correct":1}).fetchall()
+        students_correct_attempts = [students_correct_attempt[0] for students_correct_attempt in students_correct_attempts]
+        students_correct_attempts = set(students_correct_attempts)
+        
+        if 100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit:
+            db.session.execute("UPDATE courses_students SET completed=:completed WHERE id=:id", {"completed":1, "id":row_id})
+            db.session.commit()
     # Check ends
     
     # Course parameters
