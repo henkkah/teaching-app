@@ -5,7 +5,9 @@ from app import app
 from app import db
 from app import roles
 from app import language_mapping
+from app import language_mapping_reverse
 from app import level_mapping
+from app import level_mapping_reverse
 from app import assignment_types
 from logging_ import logout
 
@@ -140,10 +142,16 @@ def student_courses():
     available_courses.sort()
     enrolled_courses.sort()
     
-    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses)
+    # Data for filters
+    languages = language_mapping.values()
+    levels = level_mapping.values()
+    teachers = db.session.execute("SELECT username FROM users WHERE role=:role", {"role":'teacher'}).fetchall()
+    teachers = [teacher[0] for teacher in teachers]
+    
+    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses, languages=languages, levels=levels, teachers=teachers)
 
 
-@app.route("/student/courses/search")
+@app.route("/student/courses/search", methods=["POST"])
 def student_courses_search():
     #Authenticate
     user_id = authenticate_for_student_page()
@@ -152,19 +160,94 @@ def student_courses_search():
     elif user_id == "error1":
         return redirect("/teacher")
     
-    query = request.args["query"]
+    # Get query
+    query = request.form["query"]
     query_c = query.lower().strip()
+    courses = db.session.execute("SELECT id, code, name FROM courses").fetchall()
+    found_search = []
     if query_c == "":
         search = False
-        search_or_filter = False
+        found_search = [course[0] for course in courses]
     else:
         search = True
-        search_or_filter = True
-        found = []
-        courses = db.session.execute("SELECT id, code, name FROM courses").fetchall()
         for course in courses:
             if query_c in course[1].lower() or query_c in course[2].lower():
-                found.append(course[0])
+                found_search.append(course[0])
+    print("found_search:", found_search)
+    
+    # Get filters
+    filter = False
+    languages = request.form.getlist("language")
+    if len(languages) == 0:
+        languages = language_mapping.keys()
+    else:
+        filter = True
+        languages = [language_mapping_reverse[lang] for lang in languages]
+    if len(languages) == 1:
+        languages = "('" + languages[0] + "')"
+    else:
+        languages = str(tuple(languages))
+    
+    levels = request.form.getlist("level")
+    if len(levels) == 0:
+        levels = level_mapping.keys()
+    else:
+        filter = True
+        levels = [level_mapping_reverse[lev] for lev in levels]
+    if len(levels) == 1:
+        levels = "('" + levels[0] + "')"
+    else:
+        levels = str(tuple(levels))
+    
+    ects_min = request.form["ects_min"]
+    if ects_min != "":
+        filter = True
+    else:
+        ects_min = 0
+    ects_max = request.form["ects_max"]
+    if ects_max != "":
+        filter = True
+    else:
+        ects_max = db.session.execute("SELECT MAX(ects) FROM courses").fetchone()[0]
+
+    limit_min = request.form["limit_min"]
+    if limit_min != "":
+        filter = True
+    else:
+        limit_min = 0
+    limit_max = request.form["limit_max"]
+    if limit_max != "":
+        filter = True
+    else:
+        limit_max = 100
+    
+    teacher = request.form["teacher"]
+    if teacher == "":
+        teachers = db.session.execute("SELECT username FROM users WHERE role=:role", {"role":'teacher'}).fetchall()
+        teachers = [teacher[0] for teacher in teachers]
+    else:
+        filter = True
+        teachers = [teacher]
+    teachers_ids = []
+    for teacher in teachers:
+        teachers_ids.append(db.session.execute("SELECT id FROM users WHERE username=:username", {"username":teacher}).fetchone()[0])
+    if len(teachers_ids) == 1:
+        teachers_ids = "('" + str(teachers_ids[0]) + "')"
+    else:
+        teachers_ids = str(tuple(teachers_ids))
+
+    # Handle filters
+    sql = "SELECT id FROM courses WHERE lang IN " + languages + " AND lev IN " + levels + " AND ects >= " + str(ects_min) + " AND ects <= " + str(ects_max) + " AND lim >= " + str(limit_min) + " AND lim <= " + str(limit_max) + " AND teacher_id IN " + teachers_ids
+    results = db.session.execute(sql).fetchall()
+    found_filter = [result[0] for result in results]
+    print("found_filter:", found_filter)
+    
+    # Handle search and filter
+    found = []
+    for course in found_search:
+        if course in found_filter:
+            found.append(course)
+    search_or_filter = search or filter
     
     student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
     
@@ -179,19 +262,25 @@ def student_courses_search():
     available_courses = []
     for course in available_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
-        if (not search) or (search and id in found):
+        if id in found:
             string = header + " " + parameters
             available_courses.append((string, id))
     enrolled_courses = []
     for course in enrolled_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
-        if (not search) or (search and id in found):
+        if id in found:
             string = header + " " + parameters
             enrolled_courses.append((string, id))
     available_courses.sort()
     enrolled_courses.sort()
     
-    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses, search_or_filter=search_or_filter, search=search, query=query)
+    # Data for filters
+    languages = language_mapping.values()
+    levels = level_mapping.values()
+    teachers = db.session.execute("SELECT username FROM users WHERE role=:role", {"role":'teacher'}).fetchall()
+    teachers = [teacher[0] for teacher in teachers]
+    
+    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses, languages=languages, levels=levels, teachers=teachers, search_or_filter=search_or_filter, search=search, query=query)
 
 
 @app.route("/student/joincourse/<int:id>")

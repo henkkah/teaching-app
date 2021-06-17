@@ -12,7 +12,9 @@ db = SQLAlchemy(app)
 
 roles = ["teacher", "student"]
 language_mapping = {"ENG":"English", "FIN":"Finnish", "SWE":"Swedish"}
+language_mapping_reverse = {"English":"ENG", "Finnish":"FIN", "Swedish":"SWE"}
 level_mapping = {"BAS":"Basic", "INT":"Intermediate", "ADV":"Advanced"}
+level_mapping_reverse = {"Basic":"BAS", "Intermediate":"INT", "Advanced":"ADV"}
 assignment_types = ["multiple_choice", "text_field"]
 
 

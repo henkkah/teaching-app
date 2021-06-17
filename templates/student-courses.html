@@ -3,10 +3,12 @@
 <p><pre>username: {{ session.username }} | role: student | <a href="/logout">Log out</a></pre></p>
 <hr>
 
-<p>
 <h1> All Courses </h1>
 
+
+
 {% if search_or_filter %}
+<div style="border: 1px solid blue; padding: 5px">
 <form action="/student/courses">
 <p style="color:blue">
 
@@ -20,13 +22,54 @@ keyword '{{query}}'
 
 </p>
 </form>
+</div>
 {% endif %}
 
-<form action="/student/courses/search" method="GET">
-Keyword: <input type="text" name="query"> <br><br>
-<input type="submit" value="Search">
-</form>
 
+
+<div style="border: 1px solid grey; padding: 5px; height: 90">
+<form action="/student/courses/search" method="POST">
+
+<div class="box" style="float:left;margin:5px"> Keyword: <br> <input type="text" name="query" size="30"> <br><br>
+<input type="submit" value="Search">
+</div>
+
+<div class="box" style="float:left;margin:5px"> Language: <br>
+{% for language in languages %}
+<input type="checkbox" name="language" value={{language}}> {{language}} <br>
+{% endfor %} 
+</div>
+
+<div class="box" style="float:left;margin:5px"> Level: <br>
+{% for level in levels %}
+<input type="checkbox" name="level" value={{level}}> {{level}} <br>
+{% endfor %} 
+</div>
+
+<div class="box" style="float:left;margin:5px"> ECTS: <br>
+Min: <input type="number" name="ects_min" size="5"> <br> Max: <input type="number" name="ects_max" size="5"> <br><br>
+</div>
+
+<div class="box" style="float:left;margin:5px"> Completion limit: <br>
+Min: <input type="number" name="limit_min" size="5"> <br> Max: <input type="number" name="limit_max" size="5"> <br><br>
+</div>
+
+<div class="box" style="float:left;margin:5px"> Teacher: <br>
+<select name="teacher">
+<option value=""></option>
+{% for teacher in teachers %}
+<option value={{teacher}}>{{teacher}}</option>
+{% endfor %} 
+</select>
+<br><br><br>
+</div>
+
+</form>
+</div>
+
+
+
+<p align="left">
 <h2> Available courses: </h2>
 <ul>
 {% for course in available_courses %}
@@ -34,7 +77,9 @@ Keyword: <input type="text" name="query"> <br><br>
 	<a href="/student/joincourse/{{course[1]}}"> Join course </a>
 {% endfor %}
 </ul>
+</p>
 
+<p align="left">
 <h2> Enrolled courses: </h2>
 <ul>
 {% for course in enrolled_courses %}
@@ -44,6 +89,6 @@ Keyword: <input type="text" name="query"> <br><br>
 </ul>
 </p>
 
-<p>
+<p align="left">
 <a href="/student"> Back to Main page </a>
 </p>
