@@ -63,8 +63,10 @@ def student():
         return redirect("/teacher")
     
     # Stats
-    statistics = get_course_statistics_for_student1(user_id)
-    stats = str(statistics[0]) + " enrollments to courses, " + str(statistics[1]) + " completed"
+    courses, completed = get_course_statistics_for_student1(user_id)
+    if completed == None:
+        completed = 0
+    stats = str(courses) + " enrollments to courses, " + str(completed) + " completed"
     assignments_attempts = 0
     assignments_correct = 0
     
@@ -79,20 +81,24 @@ def student():
     ongoing_courses = []
     for course in ongoing_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
-        statistics_c = get_course_statistics_for_student2(course[0], user_id)
-        assignments_attempts += statistics_c[0]
-        assignments_correct += statistics_c[1]
+        attempts, correct = get_course_statistics_for_student2(course[0], user_id)
+        if correct == None:
+            correct = 0
+        assignments_attempts += attempts
+        assignments_correct += correct
         string = header + " " + parameters
-        stats_c = str(statistics_c[0]) + " attempts on assignments, " + str(statistics_c[1]) + " correct"
+        stats_c = str(attempts) + " attempts on assignments, " + str(correct) + " correct"
         ongoing_courses.append((string, stats_c, id))
     completed_courses = []
     for course in completed_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
-        statistics_c = get_course_statistics_for_student2(course[0], user_id)
-        assignments_attempts += statistics_c[0]
-        assignments_correct += statistics_c[1]
+        attempts, correct = get_course_statistics_for_student2(course[0], user_id)
+        if correct == None:
+            correct = 0
+        assignments_attempts += attempts
+        assignments_correct += correct
         string = header + " " + parameters
-        stats_c = str(statistics_c[0]) + " attempts on assignments, " + str(statistics_c[1]) + " correct"
+        stats_c = str(attempts) + " attempts on assignments, " + str(correct) + " correct"
         completed_courses.append((string, stats_c, id))
     ongoing_courses.sort()
     completed_courses.sort()
@@ -230,7 +236,6 @@ def student_course(id):
     # Course parameters
     parameters = get_course_parameters_for_student(id)
     
-    completed = db.session.execute("SELECT completed FROM courses_students WHERE course_id=:course_id AND student_id=:student_id", {"course_id":id, "student_id":user_id}).fetchone()[0]
     if completed == 1:
         completed = True
     else:

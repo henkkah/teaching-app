@@ -63,10 +63,10 @@ def teacher():
         return redirect("/student")
     
     # Total stats
-    students = 0
-    completed = 0
-    attempts = 0
-    correct = 0
+    total_students = 0
+    total_completed = 0
+    total_attempts = 0
+    total_correct = 0
     
     visible_courses_from_db = db.session.execute("SELECT id FROM courses WHERE teacher_id=:teacher_id AND visible=:visible", {"teacher_id":user_id, "visible":1}).fetchall()
     hidden_courses_from_db = db.session.execute("SELECT id FROM courses WHERE teacher_id=:teacher_id AND visible=:visible", {"teacher_id":user_id, "visible":0}).fetchall()
@@ -74,29 +74,37 @@ def teacher():
     visible_courses = []
     for course in visible_courses_from_db:
         parameters = get_course_parameters_for_teacher(course[0])
-        statistics = get_course_statistics_for_teacher1(course[0])
-        students += statistics[0]
-        completed += statistics[1]
-        attempts += statistics[2]
-        correct += statistics[3]
+        students, completed, attempts, correct = get_course_statistics_for_teacher1(course[0])
+        if completed == None:
+            completed = 0
+        if correct == None:
+            correct = 0
+        total_students += students
+        total_completed += completed
+        total_attempts += attempts
+        total_correct += correct
         string = parameters[1] + " " + parameters[2]
-        stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
+        stats = str(students) + " students on course, " + str(completed) + " completed - " + str(attempts) + " attempts on assignments, " + str(correct) + " correct"
         visible_courses.append((string, stats, parameters[0]))
     hidden_courses = []
     for course in hidden_courses_from_db:
         parameters = get_course_parameters_for_teacher(course[0])
-        statistics = get_course_statistics_for_teacher1(course[0])
-        students += statistics[0]
-        completed += statistics[1]
-        attempts += statistics[2]
-        correct += statistics[3]
+        students, completed, attempts, correct = get_course_statistics_for_teacher1(course[0])
+        if completed == None:
+            completed = 0
+        if correct == None:
+            correct = 0
+        total_students += students
+        total_completed += completed
+        total_attempts += attempts
+        total_correct += correct
         string = parameters[1] + " " + parameters[2]
-        stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
+        stats = str(students) + " students on course, " + str(completed) + " completed - " + str(attempts) + " attempts on assignments, " + str(correct) + " correct"
         hidden_courses.append((string, stats, parameters[0]))
     visible_courses.sort()
     hidden_courses.sort()
     
-    stats = str(students) + " students on courses, " + str(completed) + " completed - " + str(attempts) + " attempts on assignments, " + str(correct) + " correct"
+    stats = str(total_students) + " students on courses, " + str(total_completed) + " completed - " + str(total_attempts) + " attempts on assignments, " + str(total_correct) + " correct"
     
     return render_template("teacher.html", visible_courses=visible_courses, hidden_courses=hidden_courses, stats=stats)
 
@@ -334,8 +342,12 @@ def teacher_course(id):
     
     # Course parameters and statistics
     parameters = get_course_parameters_for_teacher(id)
-    statistics = get_course_statistics_for_teacher1(id)
-    stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
+    students, completed, attempts, correct = get_course_statistics_for_teacher1(id)
+    if completed == None:
+        completed = 0
+    if correct == None:
+        correct = 0
+    stats = str(students) + " students on course, " + str(completed) + " completed - " + str(attempts) + " attempts on assignments, " + str(correct) + " correct"
     
     # Course material
     material_from_db = db.session.execute("SELECT material FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
@@ -359,6 +371,8 @@ def teacher_course(id):
         for choice in choices_from_db:
             choices.append(choice[0])
         attempts, correct = get_course_statistics_for_teacher2(assignment_id)
+        if correct == None:
+            correct = 0
         statistic = str(attempts) + " attempts, " + str(correct) + " correct"
         assignments.append((assignment_id, question, type_, choices, statistic))
     
