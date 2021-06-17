@@ -4,7 +4,9 @@
 <hr>
 
 <p>
-<h1> {{ header }} <br> {{ parameters }} <br> <div style="color:green;"> {{ stats }} </div> </h1>
+<h1> {{ header }} <br> <div style="font-size:20px"> {{ parameters }} </div>
+<div style="color:green;font-size:25px"> {{ stats }} </div>
+</h1>
 
 <h2> Material </h2>
 <p> <a href="/teacher/course/{{id}}/modifymaterial"> Modify material </a> </p>
@@ -19,7 +21,9 @@
 <div style="border: 1px solid; padding: 10px">
 {% for assignment in assignments %}
 <div style="border: 1px solid grey; padding: 5px"> <p>
-<h3> {{ assignment[1] }} </h3>
+<h3> {{ assignment[1] }} <br>
+<div style="color:green;font-size:16px"> {{ assignment[4] }} </div>
+</h3>
 
 {% if assignment[2] %}
 

@@ -39,12 +39,18 @@ def get_course_parameters_for_teacher(course_id):
 
 
 # Returns [students, completed, attempts, correct]
-def get_course_statistics_for_teacher(course_id):
+def get_course_statistics_for_teacher1(course_id):
     students, completed = db.session.execute("SELECT COUNT(id), SUM(completed) FROM courses_students WHERE course_id=:course_id", {"course_id":course_id}).fetchone()
     assignments_on_course_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
     attempts_correct_sql = "SELECT COUNT(id), SUM(correct) FROM attempts WHERE assignment_id IN " + assignments_on_course_sql
     attempts, correct = db.session.execute(attempts_correct_sql, {"course_id":course_id}).fetchone()
     return (students, completed, attempts, correct)
+
+
+# Returns [attempts, correct]
+def get_course_statistics_for_teacher2(assignment_id):
+    attempts, correct = db.session.execute("SELECT COUNT(id), SUM(correct) FROM attempts WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchone()
+    return (attempts, correct)
 
 
 @app.route("/teacher")
@@ -56,27 +62,43 @@ def teacher():
     elif user_id == "error1":
         return redirect("/student")
     
+    # Total stats
+    students = 0
+    completed = 0
+    attempts = 0
+    correct = 0
+    
     visible_courses_from_db = db.session.execute("SELECT id FROM courses WHERE teacher_id=:teacher_id AND visible=:visible", {"teacher_id":user_id, "visible":1}).fetchall()
     hidden_courses_from_db = db.session.execute("SELECT id FROM courses WHERE teacher_id=:teacher_id AND visible=:visible", {"teacher_id":user_id, "visible":0}).fetchall()
     
     visible_courses = []
     for course in visible_courses_from_db:
         parameters = get_course_parameters_for_teacher(course[0])
-        statistics = get_course_statistics_for_teacher(course[0])
+        statistics = get_course_statistics_for_teacher1(course[0])
+        students += statistics[0]
+        completed += statistics[1]
+        attempts += statistics[2]
+        correct += statistics[3]
         string = parameters[1] + " " + parameters[2]
         stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
         visible_courses.append((string, stats, parameters[0]))
     hidden_courses = []
     for course in hidden_courses_from_db:
         parameters = get_course_parameters_for_teacher(course[0])
-        statistics = get_course_statistics_for_teacher(course[0])
+        statistics = get_course_statistics_for_teacher1(course[0])
+        students += statistics[0]
+        completed += statistics[1]
+        attempts += statistics[2]
+        correct += statistics[3]
         string = parameters[1] + " " + parameters[2]
         stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
         hidden_courses.append((string, stats, parameters[0]))
     visible_courses.sort()
-    hidden_courses.sort() 
+    hidden_courses.sort()
     
-    return render_template("teacher.html", visible_courses=visible_courses, hidden_courses=hidden_courses)
+    stats = str(students) + " students on courses, " + str(completed) + " completed - " + str(attempts) + " attempts on assignments, " + str(correct) + " correct"
+    
+    return render_template("teacher.html", visible_courses=visible_courses, hidden_courses=hidden_courses, stats=stats)
 
 
 @app.route("/teacher/createcourse")
@@ -312,7 +334,7 @@ def teacher_course(id):
     
     # Course parameters and statistics
     parameters = get_course_parameters_for_teacher(id)
-    statistics = get_course_statistics_for_teacher(id)
+    statistics = get_course_statistics_for_teacher1(id)
     stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
     
     # Course material
@@ -336,7 +358,9 @@ def teacher_course(id):
         choices_from_db = db.session.execute("SELECT choice FROM choices WHERE assignment_id=:assignment_id", {"assignment_id":assignment_id}).fetchall()
         for choice in choices_from_db:
             choices.append(choice[0])
-        assignments.append((assignment_id, question, type_, choices))
+        attempts, correct = get_course_statistics_for_teacher2(assignment_id)
+        statistic = str(attempts) + " attempts, " + str(correct) + " correct"
+        assignments.append((assignment_id, question, type_, choices, statistic))
     
     return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], stats=stats, material=material, assignments=assignments)
 

@@ -46,10 +46,10 @@ def get_course_statistics_for_student1(student_id):
 
 
 # Returns [attempts, correct]
-def get_course_statistics_for_student2(course_id):
+def get_course_statistics_for_student2(course_id, student_id):
     assignments_on_course_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
-    attempts_on_course_sql = "SELECT COUNT(id), SUM(correct) FROM attempts WHERE assignment_id IN " + assignments_on_course_sql
-    attempts, correct = db.session.execute(attempts_on_course_sql, {"course_id":course_id}).fetchone()
+    attempts_on_course_sql = "SELECT COUNT(id), SUM(correct) FROM attempts WHERE student_id=:student_id AND assignment_id IN " + assignments_on_course_sql
+    attempts, correct = db.session.execute(attempts_on_course_sql, {"course_id":course_id, "student_id":student_id}).fetchone()
     return (attempts, correct)
 
 
@@ -65,6 +65,8 @@ def student():
     # Stats
     statistics = get_course_statistics_for_student1(user_id)
     stats = str(statistics[0]) + " enrollments to courses, " + str(statistics[1]) + " completed"
+    assignments_attempts = 0
+    assignments_correct = 0
     
     visible_courses = "(SELECT id FROM courses WHERE visible=:visible)"
     
@@ -77,19 +79,25 @@ def student():
     ongoing_courses = []
     for course in ongoing_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
-        statistics_c = get_course_statistics_for_student2(course[0])
+        statistics_c = get_course_statistics_for_student2(course[0], user_id)
+        assignments_attempts += statistics_c[0]
+        assignments_correct += statistics_c[1]
         string = header + " " + parameters
-        stats_c = str(statistics[0]) + " attempts on assignments, " + str(statistics[1]) + " correct"
+        stats_c = str(statistics_c[0]) + " attempts on assignments, " + str(statistics_c[1]) + " correct"
         ongoing_courses.append((string, stats_c, id))
     completed_courses = []
     for course in completed_courses_from_db:
         id, header, parameters = get_course_parameters_for_student(course[0])
-        statistics_c = get_course_statistics_for_student2(course[0])
+        statistics_c = get_course_statistics_for_student2(course[0], user_id)
+        assignments_attempts += statistics_c[0]
+        assignments_correct += statistics_c[1]
         string = header + " " + parameters
-        stats_c = str(statistics[0]) + " attempts on assignments, " + str(statistics[1]) + " correct"
+        stats_c = str(statistics_c[0]) + " attempts on assignments, " + str(statistics_c[1]) + " correct"
         completed_courses.append((string, stats_c, id))
     ongoing_courses.sort()
     completed_courses.sort()
+    
+    stats += " - " + str(assignments_attempts) + " attempts on assignments, " + str(assignments_correct) + " correct"
     
     return render_template("student.html", ongoing_courses=ongoing_courses, completed_courses=completed_courses, stats=stats)
 
