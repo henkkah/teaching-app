@@ -38,6 +38,15 @@ def get_course_parameters_for_teacher(course_id):
     return return_list
 
 
+# Returns [students, completed, attempts, correct]
+def get_course_statistics_for_teacher(course_id):
+    students, completed = db.session.execute("SELECT COUNT(id), SUM(completed) FROM courses_students WHERE course_id=:course_id", {"course_id":course_id}).fetchone()
+    assignments_on_course_sql = "(SELECT id FROM assignments WHERE course_id=:course_id)"
+    attempts_correct_sql = "SELECT COUNT(id), SUM(correct) FROM attempts WHERE assignment_id IN " + assignments_on_course_sql
+    attempts, correct = db.session.execute(attempts_correct_sql, {"course_id":course_id}).fetchone()
+    return (students, completed, attempts, correct)
+
+
 @app.route("/teacher")
 def teacher():
     #Authenticate
@@ -53,13 +62,17 @@ def teacher():
     visible_courses = []
     for course in visible_courses_from_db:
         parameters = get_course_parameters_for_teacher(course[0])
+        statistics = get_course_statistics_for_teacher(course[0])
         string = parameters[1] + " " + parameters[2]
-        visible_courses.append((string, parameters[0]))
+        stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
+        visible_courses.append((string, stats, parameters[0]))
     hidden_courses = []
     for course in hidden_courses_from_db:
         parameters = get_course_parameters_for_teacher(course[0])
+        statistics = get_course_statistics_for_teacher(course[0])
         string = parameters[1] + " " + parameters[2]
-        hidden_courses.append((string, parameters[0]))
+        stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
+        hidden_courses.append((string, stats, parameters[0]))
     visible_courses.sort()
     hidden_courses.sort() 
     
@@ -297,8 +310,10 @@ def teacher_course(id):
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
     
-    # Course parameters
+    # Course parameters and statistics
     parameters = get_course_parameters_for_teacher(id)
+    statistics = get_course_statistics_for_teacher(id)
+    stats = str(statistics[0]) + " students on course, " + str(statistics[1]) + " completed - " + str(statistics[2]) + " attempts on assignments, " + str(statistics[3]) + " correct"
     
     # Course material
     material_from_db = db.session.execute("SELECT material FROM materials WHERE course_id=:course_id", {"course_id":id}).fetchone()
@@ -323,7 +338,7 @@ def teacher_course(id):
             choices.append(choice[0])
         assignments.append((assignment_id, question, type_, choices))
     
-    return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], material=material, assignments=assignments)
+    return render_template("teacher-course.html", id=id, header=parameters[1], parameters=parameters[2], stats=stats, material=material, assignments=assignments)
 
 
 @app.route("/teacher/course/<int:id>/modifymaterial")

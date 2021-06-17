@@ -10,10 +10,11 @@
 <ul>
 {% for course in visible_courses %}
 <li> {{ course[0] }}
-	<a href="/teacher/course/{{course[1]}}"> View course </a> &nbsp;
-	<a href="/teacher/hidecourse/{{course[1]}}"> Hide course </a> &nbsp;
-	<a href="/teacher/modifycourse/{{course[1]}}"> Modify course </a> &nbsp;
-	<a href="/teacher/deletecourse/{{course[1]}}"> Delete course </a> 
+	<a href="/teacher/course/{{course[2]}}"> View course </a> &nbsp;
+	<a href="/teacher/hidecourse/{{course[2]}}"> Hide course </a> &nbsp;
+	<a href="/teacher/modifycourse/{{course[2]}}"> Modify course </a> &nbsp;
+	<a href="/teacher/deletecourse/{{course[2]}}"> Delete course </a> <br>
+	<div style="color:green;"> {{ course[1] }} </div>
 {% endfor %}
 </ul>
 
@@ -21,10 +22,11 @@
 <ul>
 {% for course in hidden_courses %}
 <li> {{ course[0] }}
-	<a href="/teacher/course/{{course[1]}}"> View course </a> &nbsp;
-	<a href="/teacher/publishcourse/{{course[1]}}"> Publish course </a> &nbsp;
-	<a href="/teacher/modifycourse/{{course[1]}}"> Modify course </a> &nbsp;
-	<a href="/teacher/deletecourse/{{course[1]}}"> Delete course </a> 
+	<a href="/teacher/course/{{course[2]}}"> View course </a> &nbsp;
+	<a href="/teacher/publishcourse/{{course[2]}}"> Publish course </a> &nbsp;
+	<a href="/teacher/modifycourse/{{course[2]}}"> Modify course </a> &nbsp;
+	<a href="/teacher/deletecourse/{{course[2]}}"> Delete course </a> <br>
+	<div style="color:green;"> {{ course[1] }} </div>
 {% endfor %}
 </ul>
 </p>
