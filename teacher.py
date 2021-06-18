@@ -146,16 +146,20 @@ def teacher_createcourse_action():
     # Check coursecode
     if coursecode.strip() == "":
         return render_template("teacher-error-createcourse.html", message="Course code not given")
+    elif len(coursecode) > 20:
+        return render_template("teacher-error-createcourse.html", message="Course code too long")
     # Check coursename
     if coursename.strip() == "":
         return render_template("teacher-error-createcourse.html", message="Course name not given")
+    elif len(coursename) > 40:
+        return render_template("teacher-error-createcourse.html", message="Course name too long")
     # Check ects
     try:
         ects = int(ects)
-        if ects < 0:
-            return render_template("teacher-error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
+        if ects < 0 or ects > 100:
+            return render_template("teacher-error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0 and <=100)")
     except:
-        return render_template("teacher-error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)")
+        return render_template("teacher-error-createcourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0 and <=100)")
     # Check limit
     try:
         limit = int(limit)
@@ -264,16 +268,20 @@ def teacher_modifycourse_action(id):
     # Check coursecode
     if coursecode.strip() == "":
         return render_template("teacher-error-modifycourse.html", message="Course code not given", id=id)
+    elif len(coursecode) > 20:
+        return render_template("teacher-error-modifycourse.html", message="Course code too long", id=id)
     # Check coursename
     if coursename.strip() == "":
         return render_template("teacher-error-modifycourse.html", message="Course name not given", id=id)
+    elif len(coursename) > 40:
+        return render_template("teacher-error-modifycourse.html", message="Course name too long", id=id)
     # Check ects
     try:
         ects = int(ects)
-        if ects < 0:
-            return render_template("teacher-error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
+        if ects < 0 or ects > 100:
+            return render_template("teacher-error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0 and <=100)", id=id)
     except:
-        return render_template("teacher-error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0)", id=id)
+        return render_template("teacher-error-modifycourse.html", message="Amount of ECTS entered incorrectly (enter integer, >=0 and <=100)", id=id)
     # Check limit
     try:
         limit = int(limit)
@@ -481,7 +489,10 @@ def teacher_addassignment_action(id):
         for choice_field in choice_fields:
             given = request.form[choice_field].strip()
             if given != "":
-                choices.append(given)
+                if len(given) > 100:
+                    return render_template("teacher-error-addassignment.html", id=id, message="Max length of each choice is 100 characters", type="multiplechoice")
+                else:
+                    choices.append(given)
         if len(choices) <= 1:
             return render_template("teacher-error-addassignment.html", id=id, message="Give >=2 choices", type="multiplechoice")
     except: # Text field
@@ -500,6 +511,18 @@ def teacher_addassignment_action(id):
         else:
             return render_template("teacher-error-addassignment.html", id=id, message="Give answer", type="textfield")
 
+    # Validate question and answer
+    if multiple_choice:
+        if len(question) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of question is 100 characters", type="multiplechoice")
+        if len(answer) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of answer is 100 characters", type="multiplechoice")
+    else:
+        if len(question) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of question is 100 characters", type="textfield")
+        if len(answer) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of answer is 100 characters", type="textfield")
+    
     # Insert new assignment into db
     sql = "INSERT INTO assignments (question, answer, type_, course_id) VALUES (:question, :answer, :type_, :course_id)"
     if multiple_choice:
@@ -580,7 +603,10 @@ def teacher_modifyassignment_action(id, assignment_id):
         for choice_field in choice_fields:
             given = request.form[choice_field].strip()
             if given != "":
-                choices.append(given)
+                if len(given) > 100:
+                    return render_template("teacher-error-modifyassignment.html", id=id, message="Max length of each choice is 100 characters", type="multiplechoice", assignment_id=assignment_id)
+                else:
+                    choices.append(given)
         if len(choices) <= 1:
             return render_template("teacher-error-modifyassignment.html", id=id, message="Give >=2 choices", type="multiplechoice", assignment_id=assignment_id)
     except: # Text field
@@ -599,6 +625,18 @@ def teacher_modifyassignment_action(id, assignment_id):
         else:
             return render_template("teacher-error-modifyassignment.html", id=id, message="Give answer", type="textfield", assignment_id=assignment_id)
 
+    # Validate question and answer
+    if multiple_choice:
+        if len(question) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of question is 100 characters", type="multiplechoice")
+        if len(answer) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of answer is 100 characters", type="multiplechoice")
+    else:
+        if len(question) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of question is 100 characters", type="textfield")
+        if len(answer) > 100:
+            return render_template("teacher-error-addassignment.html", id=id, message="Max length of answer is 100 characters", type="textfield")
+    
     # Modify assignment in db
     sql = "UPDATE assignments SET question=:question, answer=:answer WHERE id=:id"
     db.session.execute(sql, {"question":question, "answer":answer, "id":assignment_id})

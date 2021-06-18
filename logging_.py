@@ -57,10 +57,14 @@ def createuser_action():
     username_in_db = db.session.execute(sql, {"username":username}).fetchone()
     if username_in_db != None or username.strip() == "": # username in use or empty
         return render_template("index-error-createuser.html", message="Username in use")
+    elif len(username) > 30:
+        return render_template("index-error-createuser.html", message="Username too long")
     
     # Check password
     if password.strip() == "":
         return render_template("index-error-createuser.html", message="Password empty")
+    elif len(password) > 30:
+        return render_template("index-error-createuser.html", message="Password too long")
     
     # Insert new user into db
     password_hash = generate_password_hash(password)

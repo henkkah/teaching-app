@@ -450,6 +450,10 @@ def student_answerassignment_action(id, assignment_id):
         return render_template("/student/course/" + str(id))
     answer = request.form["answer"]
     
+    # Validate answer
+    if len(answer) > 100:
+        return render_template("student-error-answerassignment.html", id=id, message="Max length of answer is 100 characters")
+    
     # Check answer and insert attempt into db
     correct_answer = db.session.execute("SELECT answer FROM assignments WHERE id=:id", {"id":assignment_id}).fetchone()[0]
     if answer == correct_answer:
