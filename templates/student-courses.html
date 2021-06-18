@@ -18,6 +18,14 @@ FILTER:
 keyword '{{query}}'
 {% endif %}
 
+{{ language_filter }}
+{{ level_filter }}
+{{ ects_min_filter }}
+{{ ects_max_filter }}
+{{ limit_min_filter }}
+{{ limit_max_filter }}
+{{ teacher_filter }}
+
 &nbsp; <input type="submit" value="Clear filter">
 
 </p>
@@ -27,7 +35,7 @@ keyword '{{query}}'
 
 
 
-<div style="border: 1px solid grey; padding: 5px; height: 90">
+<div style="border: 1px solid grey; padding: 5px; height: 95">
 <form action="/student/courses/search" method="POST">
 
 <div class="box" style="float:left;margin:5px"> Keyword: <br> <input type="text" name="query" size="30"> <br><br>
@@ -69,7 +77,7 @@ Min: <input type="number" name="limit_min" size="5"> <br> Max: <input type="numb
 
 
 
-<p align="left">
+<p>
 <h2> Available courses: </h2>
 <ul>
 {% for course in available_courses %}
@@ -79,7 +87,7 @@ Min: <input type="number" name="limit_min" size="5"> <br> Max: <input type="numb
 </ul>
 </p>
 
-<p align="left">
+<p>
 <h2> Enrolled courses: </h2>
 <ul>
 {% for course in enrolled_courses %}
@@ -89,6 +97,6 @@ Min: <input type="number" name="limit_min" size="5"> <br> Max: <input type="numb
 </ul>
 </p>
 
-<p align="left">
+<p>
 <a href="/student"> Back to Main page </a>
 </p>

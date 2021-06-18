@@ -327,8 +327,6 @@ def teacher_deletecourse_action(id):
     return redirect("/teacher")
 
 
-######################### Functionality for 2nd release #########################
-
 @app.route("/teacher/course/<int:id>")
 def teacher_course(id):
     #Authenticate

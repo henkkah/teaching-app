@@ -173,15 +173,18 @@ def student_courses_search():
         for course in courses:
             if query_c in course[1].lower() or query_c in course[2].lower():
                 found_search.append(course[0])
-    print("found_search:", found_search)
     
     # Get filters
     filter = False
     languages = request.form.getlist("language")
     if len(languages) == 0:
         languages = language_mapping.keys()
+        language_filter = ""
     else:
         filter = True
+        language_filter = "language"
+        for language in languages:
+            language_filter += " '" + language + "'"
         languages = [language_mapping_reverse[lang] for lang in languages]
     if len(languages) == 1:
         languages = "('" + languages[0] + "')"
@@ -191,8 +194,12 @@ def student_courses_search():
     levels = request.form.getlist("level")
     if len(levels) == 0:
         levels = level_mapping.keys()
+        level_filter = ""
     else:
         filter = True
+        level_filter = "level"
+        for level in levels:
+            level_filter += " '" + level + "'"
         levels = [level_mapping_reverse[lev] for lev in levels]
     if len(levels) == 1:
         levels = "('" + levels[0] + "')"
@@ -202,31 +209,41 @@ def student_courses_search():
     ects_min = request.form["ects_min"]
     if ects_min != "":
         filter = True
+        ects_min_filter = "ects_min '" + str(ects_min) + "'"
     else:
+        ects_min_filter = ""
         ects_min = 0
     ects_max = request.form["ects_max"]
     if ects_max != "":
         filter = True
+        ects_max_filter = "ects_max '" + str(ects_max) + "'"
     else:
+        ects_max_filter = ""
         ects_max = db.session.execute("SELECT MAX(ects) FROM courses").fetchone()[0]
 
     limit_min = request.form["limit_min"]
     if limit_min != "":
         filter = True
+        limit_min_filter = "limit_min '" + str(limit_min) + "'"
     else:
+        limit_min_filter = ""
         limit_min = 0
     limit_max = request.form["limit_max"]
     if limit_max != "":
         filter = True
+        limit_max_filter = "limit_max '" + limit_max + "'"
     else:
+        limit_max_filter = ""
         limit_max = 100
     
     teacher = request.form["teacher"]
     if teacher == "":
+        teacher_filter = ""
         teachers = db.session.execute("SELECT username FROM users WHERE role=:role", {"role":'teacher'}).fetchall()
         teachers = [teacher[0] for teacher in teachers]
     else:
         filter = True
+        teacher_filter = "teacher '" + teacher + "'"
         teachers = [teacher]
     teachers_ids = []
     for teacher in teachers:
@@ -235,12 +252,12 @@ def student_courses_search():
         teachers_ids = "('" + str(teachers_ids[0]) + "')"
     else:
         teachers_ids = str(tuple(teachers_ids))
-
+    
+    
     # Handle filters
     sql = "SELECT id FROM courses WHERE lang IN " + languages + " AND lev IN " + levels + " AND ects >= " + str(ects_min) + " AND ects <= " + str(ects_max) + " AND lim >= " + str(limit_min) + " AND lim <= " + str(limit_max) + " AND teacher_id IN " + teachers_ids
     results = db.session.execute(sql).fetchall()
     found_filter = [result[0] for result in results]
-    print("found_filter:", found_filter)
     
     # Handle search and filter
     found = []
@@ -280,7 +297,9 @@ def student_courses_search():
     teachers = db.session.execute("SELECT username FROM users WHERE role=:role", {"role":'teacher'}).fetchall()
     teachers = [teacher[0] for teacher in teachers]
     
-    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses, languages=languages, levels=levels, teachers=teachers, search_or_filter=search_or_filter, search=search, query=query)
+    return render_template("student-courses.html", available_courses=available_courses, enrolled_courses=enrolled_courses, languages=languages, levels=levels, teachers=teachers, 
+                            search_or_filter=search_or_filter, search=search, query=query, language_filter=language_filter, level_filter=level_filter, ects_min_filter=ects_min_filter, ects_max_filter=ects_max_filter,
+                            limit_min_filter=limit_min_filter, limit_max_filter=limit_max_filter, teacher_filter=teacher_filter)
 
 
 @app.route("/student/joincourse/<int:id>")
@@ -339,8 +358,6 @@ def student_leavecourse_action(id):
         db.session.commit()
     return redirect("/student")
 
-
-######################### Functionality for 2nd release #########################
 
 @app.route("/student/course/<int:id>")
 def student_course(id):
