@@ -33,6 +33,7 @@ Courses contain study material and assignments which are automatically graded by
 - Statistics for students about own performance on own courses
 - Students can search from all available courses based on course code and course name with keyword
 - Students can filter all available courses with language, level, ects, limit and teacher
+- Usage of all forms is validated with csrf tokens
 
 ### Ideas for further development
 - Chat area on a course where students and teachers can chat about the course
