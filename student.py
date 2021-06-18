@@ -160,6 +160,9 @@ def student_courses_search():
     elif user_id == "error1":
         return redirect("/teacher")
     
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
+    
     # Get query
     query = request.form["query"]
     query_c = query.lower().strip()
@@ -350,6 +353,9 @@ def student_leavecourse_action(id):
     if authenticate_student_for_course(user_id, id) == "error2":
         return redirect("/student")
     
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
+    
     leaving = request.form["leaving"]
     if leaving == "yes":
         student_id = db.session.execute("SELECT id FROM users WHERE username=:username", {"username":session["username"]}).fetchone()[0]
@@ -385,7 +391,7 @@ def student_course(id):
         students_correct_attempts = [students_correct_attempt[0] for students_correct_attempt in students_correct_attempts]
         students_correct_attempts = set(students_correct_attempts)
         
-        if 100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit:
+        if len(course_assignments) == 0 or (100.0 * len(students_correct_attempts) / len(course_assignments) >= completion_limit):
             db.session.execute("UPDATE courses_students SET completed=:completed WHERE id=:id", {"completed":1, "id":row_id})
             db.session.commit()
     # Check ends
@@ -445,6 +451,9 @@ def student_answerassignment_action(id, assignment_id):
         return redirect("/teacher")
     if authenticate_student_for_course(user_id, id) == "error2":
         return redirect("/student")
+    
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
     
     if "answer" not in request.form:
         return render_template("/student/course/" + str(id))

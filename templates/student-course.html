@@ -61,6 +61,7 @@
 <p> <input type="submit" value="Answer"> </p>
 
 </p> </div>
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 </form>
 {% endfor %}
 

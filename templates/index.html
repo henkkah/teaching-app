@@ -9,6 +9,7 @@
 <p> Username: <br> <input type="text" name="username"> </p>
 <p> Password: <br> <input type="password" name="password"> </p>
 <p> <input type="submit" value="Log in"> </p>
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
 </form>
 </p>

@@ -17,6 +17,7 @@ Are you sure you want to leave following course? <br>
 <input type="radio" name="leaving" value="no" checked> No
 </p>
 <p> <input type="submit" value="Leave course"> </p>
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
 </form>
 </p>

@@ -17,6 +17,7 @@ Are you sure you want to permanently delete following course? <br>
 <input type="radio" name="deletion" value="no" checked> No
 </p>
 <p> <input type="submit" value="Delete course"> </p>
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
 </form>
 </p>

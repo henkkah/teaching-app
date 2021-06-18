@@ -13,6 +13,7 @@
 <input type="radio" name="role" value="teacher"> Teacher
 </p>
 <p> <input type="submit" value="Create user"> </p>
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
 </form>
 </p>

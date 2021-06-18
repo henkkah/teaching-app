@@ -9,7 +9,6 @@
 
 {% if search_or_filter %}
 <div style="border: 1px solid blue; padding: 5px">
-<form action="/student/courses">
 <p style="color:blue">
 
 FILTER: 
@@ -26,10 +25,9 @@ keyword '{{query}}'
 {{ limit_max_filter }}
 {{ teacher_filter }}
 
-&nbsp; <input type="submit" value="Clear filter">
+&nbsp; <a href="/student/courses"> Clear filter </a>
 
 </p>
-</form>
 </div>
 {% endif %}
 
@@ -72,6 +70,7 @@ Min: <input type="number" name="limit_min" size="5"> <br> Max: <input type="numb
 <br><br><br>
 </div>
 
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 </form>
 </div>
 

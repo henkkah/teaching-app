@@ -130,6 +130,9 @@ def teacher_createcourse_action():
     elif user_id == "error1":
         return redirect("/student")
     
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
+    
     coursename = request.form["coursename"]
     coursecode = request.form["coursecode"]
     if "language" not in request.form:
@@ -258,6 +261,9 @@ def teacher_modifycourse_action(id):
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
     
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
+    
     coursename = request.form["coursename"]
     coursecode = request.form["coursecode"]
     language = request.form["language"]
@@ -325,6 +331,9 @@ def teacher_deletecourse_action(id):
         return redirect("/student")
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
+    
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
     
     deletion = request.form["deletion"]
     if deletion == "yes":
@@ -420,6 +429,9 @@ def teacher_modifymaterial_action(id):
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
 
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
+    
     new_material = request.form["material"]
     
     if len(new_material) > 10000:
@@ -481,6 +493,9 @@ def teacher_addassignment_action(id):
         return redirect("/student")
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
+    
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
     
     try: # Multiple choice
         multiple_choice = request.form["multiple_choice"]
@@ -596,6 +611,9 @@ def teacher_modifyassignment_action(id, assignment_id):
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
     
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
+    
     try: # Multiple choice
         multiple_choice = request.form["multiple_choice"]
         choices = []
@@ -705,6 +723,9 @@ def teacher_deleteassignment_action(id, assignment_id):
         return redirect("/student")
     if authenticate_teacher_for_course(user_id, id) == "error2":
         return redirect("/teacher")
+    
+    if session["csrf_token"] != request.form["csrf_token"]:
+        abort(403)
     
     deletion = request.form["deletion"]
     

@@ -22,6 +22,7 @@
 <p> ECTS: <br> <input type="number" name="ects"> </p>
 <p> % to complete: <br> <input type="number" name="limit"> </p>
 <p> <input type="submit" value="Create course"> </p>
+<input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
 
 </form>
 </p>

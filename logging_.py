@@ -1,5 +1,6 @@
 from flask import redirect, render_template, request, session
 from werkzeug.security import check_password_hash, generate_password_hash
+import secrets
 
 
 from app import app
@@ -29,6 +30,7 @@ def login():
         password_hash = password_in_db[0]
         if check_password_hash(password_hash, password): # correct username and password
             session["username"] = username
+            session["csrf_token"] = secrets.token_hex(16)
             role = db.session.execute("SELECT role FROM users WHERE username=:username", {"username":username}).fetchone()[0]
             if role == "teacher":
                 return redirect("/teacher")
@@ -74,6 +76,7 @@ def createuser_action():
     
     # Redirect to Teacher or Student -view
     session["username"] = username
+    session["csrf_token"] = secrets.token_hex(16)
     if role == "teacher":
         return redirect("/teacher")
     else: # student
@@ -83,6 +86,7 @@ def createuser_action():
 @app.route("/logout")
 def logout():
     del session["username"]
+    del session["csrf_token"]
     return redirect("/")
 
 
