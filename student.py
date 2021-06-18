@@ -398,7 +398,7 @@ def student_course(id):
     
     # Course parameters
     parameters = get_course_parameters_for_student(id)
-    
+    completed = db.session.execute("SELECT completed FROM courses_students WHERE student_id=:student_id AND course_id=:course_id", {"student_id":user_id, "course_id":id}).fetchone()[0]
     if completed == 1:
         completed = True
     else:
